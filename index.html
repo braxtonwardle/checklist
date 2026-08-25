@@ -1,0 +1,820 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-title" content="Weekly Board" />
+<meta name="theme-color" content="#0F1A2E" />
+<title>Weekly Board</title>
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAQYklEQVR4nO3de2ye1X3A8e85z+W9OYntJAbKJQkjNCQBAqwbKysECgyVja1lUtUBayGgjk2auqkrXZk07aaJroyVaWOoqrZCYQO2iU5DkHYXCBQKKyopDWm7QQIJkJsTX97rczlnf5zXTpw4iZ0YOz3P7yNZIch+8/p9v3583nPO87xqcMfrFvGeyHND74IePr7uTr7x5AYGFp+KMfJwv5f0XN8BIWaSBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwivhXN8B71gL2O5/G7AGrSDQoLuHD3XAp1o7/tliBkjQM8Ea96cKUEGECiIATJah4xqtVJE2DaMtizEWY1zEoYZSpIgCUApMN3Bx7NTgjtflITwm3fpUgApjlAowSZ2suZt0aCvokPbuTWjTZOOmN9i1ey9RXEIreOFHGY2OZc+I5bXtOXtHDbmBSkkRh+6mjTwrx0SCnjbrjsg6QodlTFInGdpCe+dG2rt/QN7ei0nqgEIphbVQrZQJowBrLCjQ3Y9mYtk7atm4NeeZTSnffT3jnb2GMIBqyX2thD09EvR0WAM6QIdV8vY+GtuepbntWbL6LqxJUEEJpUNQE19rG2Ow1qK6o+exB1wriAIox+7/7x4xPLc546ENHTZty4lDF7YMRaZOgp4S98pNR1XyZJjmW89R3/pfZI0dLuIgAtTEF4RTveUDjsJRCLVYUe9Y1r+S8vCGDpu351RKijAAY2b8G/OOBH001oAOUUFM6+3vMLz5MbLGzm7Ipe4Lwpl5CC0u2kBDT0XRTiyPfDvhvvVtmh1LraTIJeojkqCPxBpUEGGNYXjzo9TfWI8Kyygdz2jIk8m7YS+oKl59M+fzDzV5Y0fOvIpEfSQS9OFYgwpL5O1hBl/6K5LhLeio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" />
+<link rel="icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAQYklEQVR4nO3de2ye1X3A8e85z+W9OYntJAbKJQkjNCQBAqwbKysECgyVja1lUtUBayGgjk2auqkrXZk07aaJroyVaWOoqrZCYQO2iU5DkHYXCBQKKyopDWm7QQIJkJsTX97rczlnf5zXTpw4iZ0YOz3P7yNZIch+8/p9v3583nPO87xqcMfrFvGeyHND74IePr7uTr7x5AYGFp+KMfJwv5f0XN8BIWaSBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwisStPCKBC28IkELr0jQwivhXN8B71gL2O5/G7AGrSDQoLuHD3XAp1o7/tliBkjQM8Ea96cKUEGECiIATJah4xqtVJE2DaMtizEWY1zEoYZSpIgCUApMN3Bx7NTgjtflITwm3fpUgApjlAowSZ2suZt0aCvokPbuTWjTZOOmN9i1ey9RXEIreOFHGY2OZc+I5bXtOXtHDbmBSkkRh+6mjTwrx0SCnjbrjsg6QodlTFInGdpCe+dG2rt/QN7ei0nqgEIphbVQrZQJowBrLCjQ3Y9mYtk7atm4NeeZTSnffT3jnb2GMIBqyX2thD09EvR0WAM6QIdV8vY+GtuepbntWbL6LqxJUEEJpUNQE19rG2Ow1qK6o+exB1wriAIox+7/7x4xPLc546ENHTZty4lDF7YMRaZOgp4S98pNR1XyZJjmW89R3/pfZI0dLuIgAtTEF4RTveUDjsJRCLVYUe9Y1r+S8vCGDpu351RKijAAY2b8G/OOBH001oAOUUFM6+3vMLz5MbLGzm7Ipe4Lwpl5CC0u2kBDT0XRTiyPfDvhvvVtmh1LraTIJeojkqCPxBpUEGGNYXjzo9TfWI8Kyygdz2jIk8m7YS+oKl59M+fzDzV5Y0fOvIpEfSQS9OFYgwpL5O1hBl/6K5LhLeio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" />
+<style>
+  :root {
+    --bg: #0F1A2E;
+    --panel: #13203A;
+    --line: #1E2C4A;
+    --line2: #2C3A57;
+    --ink: #F2EFE6;
+    --muted: #8FA0C4;
+    --muted2: #6E80A8;
+    --gold: #D4A24C;
+    --navy-square: #16213E;
+    --ivory-square: #EDE8DD;
+    --teal: #4C6A73;
+    --olive: #7A8C4C;
+    font-family: 'Georgia', 'Iowan Old Style', ui-serif, serif;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: env(safe-area-inset-top, 24px) 16px calc(env(safe-area-inset-bottom, 24px) + 24px);
+  }
+  .wrap { width: 100%; max-width: 420px; margin: 0 auto; padding-top: 12px; }
+  .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+
+  .quote-block { margin-bottom: 16px; }
+  .quote-text { color: #C7D0E8; font-size: 12.5px; line-height: 1.4; font-style: italic; }
+  .quote-author { color: var(--muted2); font-size: 11px; margin-top: 4px; }
+
+  .nav-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .nav-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    border: 1px solid var(--line2); background: transparent; color: var(--gold);
+    font-size: 18px; cursor: pointer; line-height: 1;
+  }
+  .nav-btn:disabled { opacity: .3; cursor: default; }
+  .nav-center { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .nav-date { color: var(--ink); font-size: 13.5px; }
+  .jump-btn {
+    background: transparent; border: none; color: var(--gold);
+    font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0;
+  }
+
+  .progress-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+  .progress { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 14px; }
+
+  .board {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
+    border-radius: 10px; overflow: hidden; margin-bottom: 6px;
+  }
+  .square {
+    position: relative;
+    min-height: 74px; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 5px; border: none; cursor: pointer;
+    padding: 10px 8px; text-align: center; font-family: inherit;
+  }
+  .square .emoji { font-size: 17px; line-height: 1; }
+  .square .label { font-size: 12px; line-height: 1.25; }
+  .sq-dark { background: var(--navy-square); color: var(--ink); }
+  .sq-light { background: var(--ivory-square); color: #16213E; }
+  .sq-checked { background: var(--gold); color: #16213E; }
+  .streak-badge {
+    position: absolute; top: 5px; right: 6px; font-size: 10px;
+    line-height: 1; opacity: .85;
+  }
+  .streak-mini { font-size: 10px; opacity: .75; margin-left: 5px; }
+
+  .square:disabled { opacity: .35; cursor: default; }
+
+  .skip-btn {
+    width: 100%; margin-top: 10px; padding: 9px 10px; border-radius: 8px;
+    border: 1px solid var(--line2); background: transparent; color: var(--muted2);
+    font-size: 12.5px; cursor: pointer; font-family: inherit;
+  }
+  .skip-btn.active { background: #2A2038; color: var(--gold); border-color: var(--gold); }
+
+  .dual-check:disabled { opacity: .3; cursor: default; }
+  .dual-check.skip-active { background: var(--muted2); border-color: var(--muted2); color: var(--bg); }
+
+  .mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .mode-btn {
+    flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line2);
+    background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
+  }
+  .mode-btn.active { background: #182A4A; color: var(--ink); border-color: var(--gold); }
+
+  .dual-list { background: var(--panel); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; }
+  .dual-header { display: flex; align-items: center; padding-bottom: 4px; }
+  .dual-header span { width: 34px; text-align: center; color: var(--muted2); font-size: 11px; letter-spacing: .08em; }
+  .dual-row { display: flex; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
+  .dual-row:first-of-type { border-top: none; }
+  .dual-label { flex: 1; color: var(--ink); font-size: 13.5px; }
+  .dual-check {
+    width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--line2);
+    margin-left: 5px; cursor: pointer; color: #16213E; font-size: 13px; font-weight: 700;
+    line-height: 21px; background: transparent; font-family: inherit;
+  }
+  .dual-check.checked { background: var(--gold); border-color: var(--gold); }
+
+  .cluster-label {
+    color: var(--muted2); font-size: 11px; letter-spacing: .12em; font-weight: 600;
+    margin-bottom: 6px; margin-top: 14px;
+  }
+
+  .reset-list { background: var(--panel); border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; }
+  .reset-row { display: flex; align-items: center; color: var(--ink); font-size: 13.5px; padding: 5px 0; cursor: pointer; }
+  .reset-row input { width: 15px; height: 15px; margin-right: 8px; accent-color: var(--gold); }
+
+  .history-strip {
+    display: flex; justify-content: space-between; align-items: flex-end;
+    height: 48px; margin: 18px 4px 18px;
+  }
+  .history-col {
+    display: flex; flex-direction: column; align-items: center; gap: 4px; width: 20px;
+    background: none; border: none; cursor: pointer; padding: 0; font-family: inherit;
+  }
+  .history-bar { width: 10px; border-radius: 3px; }
+  .history-label { color: var(--muted2); font-size: 10px; }
+
+  .weekly { background: var(--panel); border-radius: 10px; padding: 14px 16px; }
+  .weekly-header { color: var(--gold); font-size: 11px; letter-spacing: .15em; font-weight: 600; margin-bottom: 10px; }
+  .weekly-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .weekly-label { color: var(--ink); font-size: 13.5px; flex: 1; }
+  .dots { display: flex; gap: 5px; }
+  .dot { width: 12px; height: 12px; border-radius: 50%; border: 1.5px solid var(--gold); display: inline-block; }
+  .dot.filled { background: var(--gold); }
+  .weekly-btns { display: flex; gap: 6px; }
+  .small-btn, .small-btn-ghost {
+    border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-family: inherit;
+  }
+  .small-btn { background: var(--gold); color: #16213E; border: none; }
+  .small-btn-ghost { background: transparent; color: var(--muted2); border: 1px solid var(--line2); }
+
+  .footer-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .footer-btn {
+    background: transparent; color: var(--muted2); border: 1px solid var(--line2);
+    border-radius: 8px; padding: 8px 12px; font-size: 12.5px; cursor: pointer; font-family: inherit;
+  }
+  .tiny { color: var(--muted2); font-size: 11px; margin-top: 10px; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="wrap sans">
+  <div class="quote-block" style="font-family: 'Georgia', serif;">
+    <div class="quote-text" id="quoteText"></div>
+    <div class="quote-author" id="quoteAuthor"></div>
+  </div>
+
+  <div class="nav-row">
+    <button class="nav-btn" id="prevBtn">‹</button>
+    <div class="nav-center">
+      <span class="nav-date" id="navDate"></span>
+      <button class="jump-btn" id="jumpBtn" style="display:none;">today</button>
+    </div>
+    <button class="nav-btn" id="nextBtn">›</button>
+  </div>
+
+  <div id="weekdayView">
+    <div class="progress-row"><span class="progress" id="progress"></span></div>
+    <div class="board" id="weekdayBoard"></div>
+    <button class="skip-btn" id="skipDayBtn">🤒 Sick / vacation — skip today</button>
+  </div>
+
+  <div id="weekendView" style="display:none;">
+    <div class="mode-row">
+      <button class="mode-btn" id="regularBtn">Weekend</button>
+      <button class="mode-btn" id="sophieBtn">Sophie weekend</button>
+    </div>
+    <div class="dual-list">
+      <div class="dual-header"><span style="flex:1;"></span><span>Sat</span><span>Sun</span></div>
+      <div id="dualList"></div>
+      <div class="dual-row" style="border-top:1px solid var(--line);">
+        <span class="dual-label"><span style="margin-right:6px;">🤒</span>Sick / vacation</span>
+        <button class="dual-check" id="skipSatBtn" title="Skip Saturday"></button>
+        <button class="dual-check" id="skipSunBtn" title="Skip Sunday"></button>
+      </div>
+    </div>
+    <div class="board" id="extraBoard"></div>
+    <div class="cluster-label" id="resetLabel"></div>
+    <div class="reset-list" id="resetList"></div>
+  </div>
+
+  <div class="history-strip" id="historyStrip"></div>
+
+  <div class="weekly">
+    <div class="weekly-header">This week</div>
+    <div class="weekly-row">
+      <span class="weekly-label">🧘 Meditation</span>
+      <div class="dots" id="medDots"></div>
+      <div class="weekly-btns">
+        <button class="small-btn" id="medPlus">+1</button>
+        <button class="small-btn-ghost" id="medReset">reset</button>
+      </div>
+    </div>
+    <div class="weekly-row">
+      <span class="weekly-label">🍳 Cooked at home</span>
+      <div class="dots" id="cookDots"></div>
+      <div class="weekly-btns">
+        <button class="small-btn" id="cookPlus">+1</button>
+        <button class="small-btn-ghost" id="cookReset">reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-actions">
+    <button class="footer-btn" id="exportBtn">Export data</button>
+  </div>
+  <div class="tiny">Saves locally in this browser only. Export occasionally if you care about keeping history long-term.</div>
+</div>
+
+<script>
+  // ---------- storage ----------
+  const DAY_KEY = "wb_day_v1";
+  const WEEKEND_KEY = "wb_weekend_v1";
+  const WEEK_KEY = "wb_week_v1";
+
+  function loadJSON(key, fallback) {
+    try { return JSON.parse(localStorage.getItem(key)) || fallback; }
+    catch (e) { return fallback; }
+  }
+  function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+
+  let dayData = loadJSON(DAY_KEY, {});       // { "YYYY-MM-DD": { checks: {} } }
+  let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, sat, sun, extra, reset } }
+  let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, workoutCount } }
+
+  // ---------- date helpers ----------
+  function toDateKey(d) {
+    const off = d.getTimezoneOffset();
+    const local = new Date(d.getTime() - off * 60000);
+    return local.toISOString().slice(0, 10);
+  }
+  function mondayOf(d) {
+    const day = d.getDay();
+    const diff = (day === 0 ? -6 : 1) - day;
+    const m = new Date(d);
+    m.setDate(d.getDate() + diff);
+    m.setHours(0,0,0,0);
+    return m;
+  }
+  function weekKeyOf(d) { return "wk-" + toDateKey(mondayOf(d)); }
+  function isWeekendDay(d) { const day = d.getDay(); return day === 0 || day === 6; }
+  function addDays(d, n) { const nd = new Date(d); nd.setDate(d.getDate() + n); return nd; }
+  function sameDate(a, b) { return toDateKey(a) === toDateKey(b); }
+  function last7Days(today) { const out = []; for (let i = 6; i >= 0; i--) out.push(addDays(today, -i)); return out; }
+
+  // ---------- item config ----------
+  const WEEKDAY_ITEMS = [
+    { key: "bed7", label: "Up by 7", emoji: "⏰" },
+    { key: "water", label: "Water first", emoji: "💧" },
+    { key: "lucy", label: "Lucy walked", emoji: "🐾" },
+    { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
+    { key: "chess", label: "Chess study", emoji: "♞" },
+    { key: "clean", label: "Daily reset (10 min)", emoji: "🧹" },
+    { key: "phoneBed", label: "Phone out, bed by 10:30", emoji: "📵" },
+  ];
+
+  // ---------- scheduled workout days (Mon/Wed/Thu), with one day of grace ----------
+  // Each item is tied to a specific weekday and its own persistent key. If the
+  // scheduled day passes unchecked, a single "Makeup" square appears the
+  // following day only — checking it writes back to the ORIGINAL day's entry
+  // (not today's), so streak/history stay accurate to when it was scheduled.
+  // No streak badge on these on purpose — kept low-pressure given competing
+  // priorities with CSET study and past burnout.
+  const WORKOUT_ITEMS = [
+    { weekday: 1, key: "gym1", label: "Gym (bouldering + lifting)", emoji: "🧗" }, // Monday
+    { weekday: 3, key: "cycle", label: "Cycling", emoji: "🚴" },                    // Wednesday
+    { weekday: 4, key: "gym2", label: "Gym (bouldering + lifting)", emoji: "🧗" },  // Thursday
+  ];
+  const WORKOUT_TOSSUP = { key: "workoutToss", label: "Catch-up workout (your choice)", emoji: "🔀" };
+
+  function getVisibleWorkoutItems(viewDate) {
+    const wd = viewDate.getDay();
+    const todayItem = WORKOUT_ITEMS.find(w => w.weekday === wd);
+    if (todayItem) {
+      return [{ item: todayItem, dateKey: toDateKey(viewDate), isMakeup: false }];
+    }
+
+    if (wd === 5) { // Friday — can absorb a missed Wed and/or Thu
+      const wedDate = addDays(viewDate, -2);
+      const thuDate = addDays(viewDate, -1);
+      const wedItem = WORKOUT_ITEMS.find(w => w.weekday === 3);
+      const thuItem = WORKOUT_ITEMS.find(w => w.weekday === 4);
+      const wedEntry = dayData[toDateKey(wedDate)];
+      const thuEntry = dayData[toDateKey(thuDate)];
+      const wedMissed = !(wedEntry && wedEntry.checks && wedEntry.checks[wedItem.key]);
+      const thuMissed = !(thuEntry && thuEntry.checks && thuEntry.checks[thuItem.key]);
+      if (wedMissed && thuMissed) {
+        return [{ item: WORKOUT_TOSSUP, dateKey: toDateKey(viewDate), isMakeup: true }];
+      }
+      if (thuMissed) return [{ item: thuItem, dateKey: toDateKey(thuDate), isMakeup: true }];
+      if (wedMissed) return [{ item: wedItem, dateKey: toDateKey(wedDate), isMakeup: true }];
+      return [];
+    }
+
+    // Tuesday intentionally never shows a workout (chess night, no time) — a
+    // missed Monday just has no makeup; that slot is simply lost.
+    return [];
+  }
+
+  const REST_ITEM = { key: "restDay", label: "Rest day", emoji: "🌿" };
+  // Resolves the single workout-slot square for a given day: a scheduled
+  // workout, a makeup, the Friday toss-up, or — if none of those apply —
+  // a plain checkable "Rest day" square, so the slot is never empty.
+  function getWorkoutSlot(viewDate) {
+    const visible = getVisibleWorkoutItems(viewDate);
+    if (visible.length > 0) return visible[0];
+    return { item: REST_ITEM, dateKey: toDateKey(viewDate), isMakeup: false };
+  }
+
+  // ---------- rotating chore pool ----------
+  // All 5 chores share one queue in a fixed order. Each weekday, the first
+  // ELIGIBLE item in the queue is shown — trash is only eligible Wed/Thu/Fri
+  // (pickup window), so on Mon/Tue it's skipped over without losing its
+  // place, and the next eligible item behind it is offered instead. A chore
+  // only advances (gets removed from the front of the line, with a fresh
+  // item added to the back) once it's actually checked off — an unchecked or
+  // skipped day just means the same chore is offered again next time.
+  // Simulated forward from a fixed anchor date rather than stored as
+  // separate state, so it's fully derived from your existing check history.
+  const CHORE_POOL = [
+    { key: "bathroom", label: "Clean bathroom", emoji: "🧼" },
+    { key: "vacuum", label: "Vacuum", emoji: "🧹" },
+    { key: "kitchen", label: "Clean kitchen", emoji: "🍽️" },
+    { key: "organize", label: "General organization", emoji: "🗂️" },
+    { key: "trash", label: "Take out trash", emoji: "🗑️" },
+  ];
+  const CHORE_ROTATION_EPOCH = new Date(2026, 7, 17); // fixed Monday anchor — before this feature existed
+  function isChoreEligible(item, d) {
+    if (item.key === "trash") { const day = d.getDay(); return day === 4 || day === 5; }
+    return true;
+  }
+  function getChoreForDate(targetDate) {
+    let pending = CHORE_POOL.slice();
+    let nextSupplyIdx = CHORE_POOL.length;
+    let cur = new Date(CHORE_ROTATION_EPOCH);
+    for (let guard = 0; guard < 3000; guard++) {
+      const day = cur.getDay();
+      if (day >= 1 && day <= 5) {
+        let idx = pending.findIndex(item => isChoreEligible(item, cur));
+        if (idx === -1) idx = 0;
+        const todaysChore = pending[idx];
+        if (sameDate(cur, targetDate)) return todaysChore;
+        const entry = dayData[toDateKey(cur)];
+        const completed = !!(entry && entry.checks && entry.checks.clean);
+        if (completed) {
+          pending.splice(idx, 1);
+          pending.push(CHORE_POOL[nextSupplyIdx % CHORE_POOL.length]);
+          nextSupplyIdx++;
+        }
+      }
+      cur = addDays(cur, 1);
+    }
+    return CHORE_POOL[0];
+  }
+  const WEEKEND_DUAL_ITEMS = [
+    { key: "water", label: "Water first", emoji: "💧" },
+    { key: "lucyAM", label: "Lucy walk (AM)", emoji: "🐾" },
+    { key: "lucyPM", label: "Lucy walk (PM)", emoji: "🐾" },
+    { key: "phone", label: "Phone outside room", emoji: "📵" },
+    { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
+  ];
+  const WEEKEND_EXTRA_ITEMS = [
+    { key: "physicalActivity", label: "Physical activity", emoji: "💪" },
+    { key: "meditationSession", label: "Meditation session", emoji: "🧘" },
+    { key: "chessStudy", label: "Dedicated chess study", emoji: "♞" },
+  ];
+  const REGULAR_RESET_ITEMS = [
+    { key: "clean", label: "Weekly clean", emoji: "🧹" },
+    { key: "calendar", label: "Calendar glanced at", emoji: "📅" },
+    { key: "groceries", label: "Groceries", emoji: "🛒" },
+    { key: "slots", label: "Choose week's slots", emoji: "♟️" },
+  ];
+  const SOPHIE_RESET_ITEMS = [
+    { key: "calendar", label: "Calendar glanced at", emoji: "📅" },
+    { key: "laundry", label: "Laundry", emoji: "🧺" },
+  ];
+  const MEDITATION_TARGET = 3;
+  const COOKING_TARGET = 3;
+
+  // ---------- quotes ----------
+  const QUOTES = [
+    { text: "You have power over your mind, not outside events. Realize this, and you will find strength.", author: "Marcus Aurelius" },
+    { text: "Every game of chess is a struggle for the initiative.", author: "José Raúl Capablanca" },
+    { text: "Muddy water is best cleared by leaving it alone.", author: "Alan Watts (paraphrased)" },
+    { text: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
+    { text: "The board doesn't care how you felt yesterday, only what you do with the move in front of you.", author: "unknown" },
+    { text: "We suffer more in imagination than in reality.", author: "Seneca" },
+    { text: "Even a poor plan is better than no plan at all.", author: "Mikhail Chigorin" },
+    { text: "You are an aperture through which the universe is looking at and exploring itself.", author: "Alan Watts" },
+    { text: "Courage, dear heart.", author: "C.S. Lewis" },
+    { text: "Nothing is permanent in this wicked world, not even our troubles.", author: "Charlie Chaplin" },
+    { text: "First say to yourself what you would be, and then do what you have to do.", author: "Epictetus" },
+    { text: "Chess is life in miniature. Chess is a struggle, chess battles.", author: "Garry Kasparov" },
+    { text: "This too is impermanent — which is exactly why it's worth showing up for.", author: "Buddhist teaching (paraphrased)" },
+    { text: "To be whole is to be part; true voyage is return.", author: "Ursula K. Le Guin" },
+    { text: "A good day is just a series of small, boring decisions made well.", author: "unknown" },
+    { text: "Waste no more time arguing what a good man should be. Be one.", author: "Marcus Aurelius" },
+    { text: "The mistakes are all there, waiting to be made.", author: "Savielly Tartakower" },
+    { text: "The mind that is not baffled is not employed.", author: "Wendell Berry" },
+    { text: "Memories, even your most precious ones, fade surprisingly quickly.", author: "Kazuo Ishiguro" },
+    { text: "Hitting bottom can turn out to be solid ground to build on.", author: "unknown" },
+    { text: "It is not that we have a short time to live, but that we waste a lot of it.", author: "Seneca" },
+    { text: "Tactics flow from a superior position.", author: "Bobby Fischer" },
+    { text: "The wound is the place where the light enters you.", author: "Rumi" },
+    { text: "When we are no longer able to change a situation, we are challenged to change ourselves.", author: "Viktor Frankl" },
+    { text: "No man is free who is not master of himself.", author: "Epictetus" },
+    { text: "When you see a good move, look for a better one.", author: "Emanuel Lasker" },
+    { text: "One must imagine Sisyphus happy.", author: "Albert Camus" },
+    { text: "Confine yourself to the present.", author: "Marcus Aurelius" },
+    { text: "A weak player is more likely to make a mistake if the position is complicated.", author: "Mikhail Tal" },
+    { text: "Have patience with everything that remains unsolved in your heart.", author: "Rainer Maria Rilke" },
+    { text: "He who fears death will never do anything worthy of a man who is alive.", author: "Seneca" },
+    { text: "Life can only be understood backwards; but it must be lived forwards.", author: "Søren Kierkegaard" },
+    { text: "The obstacle is the way.", author: "Marcus Aurelius (paraphrased)" },
+    { text: "Start where you are. This is very important.", author: "Pema Chödrön" },
+    { text: "Attention is the beginning of devotion.", author: "Mary Oliver" },
+    { text: "How we spend our days is, of course, how we spend our lives.", author: "Annie Dillard" },
+    { text: "The greatest thing in the world is to know how to belong to oneself.", author: "Michel de Montaigne" },
+    { text: "Talent counts, effort counts twice.", author: "Angela Duckworth" },
+    { text: "Attention is the rarest and purest form of generosity.", author: "Simone Weil" },
+    { text: "Life is available only in the present moment.", author: "Thich Nhat Hanh" },
+  ];
+  function dailyQuote(d) {
+    const epochDays = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
+    const idx = ((epochDays % QUOTES.length) + QUOTES.length) % QUOTES.length;
+    return QUOTES[idx];
+  }
+
+  // ---------- state ----------
+  const realToday = new Date();
+  let viewDate = new Date(realToday);
+
+  function getDayEntry(key) {
+    if (!dayData[key]) dayData[key] = { checks: {} };
+    return dayData[key];
+  }
+  function getWeekendEntry(key) {
+    if (!weekendData[key]) weekendData[key] = { mode: "regular", sat: {}, sun: {}, extra: {}, reset: {}, skipSat: false, skipSun: false };
+    if (weekendData[key].skipSat === undefined) weekendData[key].skipSat = false;
+    if (weekendData[key].skipSun === undefined) weekendData[key].skipSun = false;
+    return weekendData[key];
+  }
+  function getWeekEntry(key) {
+    if (!weekData[key]) weekData[key] = { meditationCount: 0, cookingCount: 0 };
+    if (weekData[key].cookingCount === undefined) weekData[key].cookingCount = 0;
+    return weekData[key];
+  }
+
+  // ---------- streaks ----------
+  // Consecutive weekdays (Mon-Fri only) with itemKey checked, walking backward from uptoDate.
+  // If uptoDate is genuinely today and still unchecked, that day is treated as "pending" (skipped,
+  // not counted, doesn't break the streak) rather than a miss.
+  function weekdayStreak(itemKey, uptoDate) {
+    let streak = 0;
+    let d = new Date(uptoDate);
+    d.setHours(0, 0, 0, 0);
+    for (let guard = 0; guard < 500; guard++) {
+      if (isWeekendDay(d)) { d = addDays(d, -1); continue; }
+      const key = toDateKey(d);
+      const entry = dayData[key];
+      if (entry && entry.skip) { d = addDays(d, -1); continue; }
+      const checked = !!(entry && entry.checks[itemKey]);
+      const isRealToday = sameDate(d, realToday);
+      if (checked) {
+        streak++;
+      } else if (isRealToday) {
+        // in-progress day, no verdict yet
+      } else {
+        break;
+      }
+      d = addDays(d, -1);
+    }
+    return streak;
+  }
+
+  // Consecutive weeks meeting a weekly counter's target, walking backward from the week containing uptoDate.
+  // The current in-progress week doesn't break the streak if it hasn't hit target yet.
+  function weeklyCounterStreak(counterKey, target, uptoDate) {
+    let streak = 0;
+    let d = mondayOf(uptoDate);
+    const currentWeekKey = weekKeyOf(realToday);
+    for (let guard = 0; guard < 200; guard++) {
+      const key = "wk-" + toDateKey(d);
+      const entry = weekData[key];
+      const count = entry ? (entry[counterKey] || 0) : 0;
+      const isCurrentWeek = key === currentWeekKey;
+      if (count >= target) {
+        streak++;
+      } else if (isCurrentWeek) {
+        // in-progress week, no verdict yet
+      } else {
+        break;
+      }
+      d = addDays(d, -7);
+    }
+    return streak;
+  }
+
+  function escapeHTML(str) {
+    return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
+  }
+
+  // ---------- render ----------
+  function render() {
+    const viewDateKey = toDateKey(viewDate);
+    const viewWeekKey = weekKeyOf(viewDate);
+    const viewWeekend = isWeekendDay(viewDate);
+    const isToday = sameDate(viewDate, realToday);
+
+    // quote (always today's real quote, not the viewed day's)
+    const q = dailyQuote(realToday);
+    document.getElementById("quoteText").textContent = "\u201C" + q.text + "\u201D";
+    document.getElementById("quoteAuthor").textContent = "\u2014 " + q.author;
+
+    // nav
+    document.getElementById("nextBtn").disabled = isToday;
+    document.getElementById("jumpBtn").style.display = isToday ? "none" : "inline";
+    if (viewWeekend) {
+      const monday = mondayOf(viewDate);
+      const sat = addDays(monday, 5), sun = addDays(monday, 6);
+      const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      document.getElementById("navDate").textContent = fmt(sat) + " \u2013 " + fmt(sun);
+    } else {
+      document.getElementById("navDate").textContent = viewDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+    }
+
+    document.getElementById("weekdayView").style.display = viewWeekend ? "none" : "block";
+    document.getElementById("weekendView").style.display = viewWeekend ? "block" : "none";
+
+    if (!viewWeekend) {
+      const entry = getDayEntry(viewDateKey);
+      const skipped = !!entry.skip;
+      const workoutSlot = getWorkoutSlot(viewDate);
+      const workoutEntry = getDayEntry(workoutSlot.dateKey);
+      const workoutChecked = !!workoutEntry.checks[workoutSlot.item.key];
+      const staticDone = WEEKDAY_ITEMS.filter(i => entry.checks[i.key]).length;
+      const done = staticDone + (workoutChecked ? 1 : 0);
+      document.getElementById("progress").textContent = skipped ? "Skipped — sick / vacation" : (done + "/" + (WEEKDAY_ITEMS.length + 1));
+
+      const board = document.getElementById("weekdayBoard");
+      board.innerHTML = "";
+      // 5 static items, then the workout slot, then the remaining 2 static items —
+      // forms a clean 4-row x 2-col grid with the workout square next to chess study.
+      const gridItems = [
+        ...WEEKDAY_ITEMS.slice(0, 5).map(item => ({ kind: "static", item })),
+        { kind: "workout" },
+        ...WEEKDAY_ITEMS.slice(5).map(item => ({ kind: "static", item })),
+      ];
+      gridItems.forEach((cell, idx) => {
+        const row = Math.floor(idx / 2), col = idx % 2;
+        const dark = (row + col) % 2 === 1;
+        const btn = document.createElement("button");
+
+        if (cell.kind === "workout") {
+          btn.className = "square " + (workoutChecked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.disabled = skipped;
+          const prefix = workoutSlot.isMakeup ? "Makeup: " : "";
+          btn.innerHTML = `<span class="emoji">${workoutSlot.item.emoji}</span><span class="label">${escapeHTML(prefix + workoutSlot.item.label)}</span>`;
+          btn.addEventListener("click", () => {
+            workoutEntry.checks[workoutSlot.item.key] = !workoutEntry.checks[workoutSlot.item.key];
+            saveJSON(DAY_KEY, dayData);
+            render();
+          });
+        } else {
+          const item = cell.item;
+          const checked = !!entry.checks[item.key];
+          const streak = weekdayStreak(item.key, viewDate);
+          const todaysChore = item.key === "clean" ? getChoreForDate(viewDate) : null;
+          const displayLabel = todaysChore ? todaysChore.label : item.label;
+          const displayEmoji = todaysChore ? todaysChore.emoji : item.emoji;
+          btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.disabled = skipped;
+          btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
+            (streak > 0 ? `<span class="streak-badge">🔥${streak}</span>` : "");
+          btn.addEventListener("click", () => {
+            entry.checks[item.key] = !entry.checks[item.key];
+            saveJSON(DAY_KEY, dayData);
+            render();
+          });
+        }
+        board.appendChild(btn);
+      });
+
+      const skipBtn = document.getElementById("skipDayBtn");
+      skipBtn.className = "skip-btn" + (skipped ? " active" : "");
+      skipBtn.textContent = skipped ? "🤒 Skipped — tap to undo" : "🤒 Sick / vacation — skip today";
+    } else {
+      const wEntry = getWeekendEntry(viewWeekKey);
+      document.getElementById("regularBtn").className = "mode-btn" + (wEntry.mode !== "sophie" ? " active" : "");
+      document.getElementById("sophieBtn").className = "mode-btn" + (wEntry.mode === "sophie" ? " active" : "");
+
+      const satLocked = !!wEntry.skipSat;
+      const sunLocked = !!wEntry.skipSun;
+
+      const dualList = document.getElementById("dualList");
+      dualList.innerHTML = "";
+      WEEKEND_DUAL_ITEMS.forEach(item => {
+        const row = document.createElement("div");
+        row.className = "dual-row";
+        const satChecked = !!wEntry.sat[item.key];
+        const sunChecked = !!wEntry.sun[item.key];
+        row.innerHTML = `
+          <span class="dual-label"><span style="margin-right:6px;">${item.emoji}</span>${escapeHTML(item.label)}</span>
+          <button class="dual-check ${satChecked ? "checked" : ""}" data-part="sat" data-key="${item.key}" ${satLocked ? "disabled" : ""}>${satChecked ? "\u2713" : ""}</button>
+          <button class="dual-check ${sunChecked ? "checked" : ""}" data-part="sun" data-key="${item.key}" ${sunLocked ? "disabled" : ""}>${sunChecked ? "\u2713" : ""}</button>
+        `;
+        dualList.appendChild(row);
+      });
+      dualList.querySelectorAll(".dual-check").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const part = btn.dataset.part, key = btn.dataset.key;
+          wEntry[part][key] = !wEntry[part][key];
+          saveJSON(WEEKEND_KEY, weekendData);
+          render();
+        });
+      });
+
+      const skipSatBtn = document.getElementById("skipSatBtn");
+      const skipSunBtn = document.getElementById("skipSunBtn");
+      skipSatBtn.className = "dual-check" + (satLocked ? " skip-active" : "");
+      skipSatBtn.textContent = satLocked ? "\u2715" : "";
+      skipSunBtn.className = "dual-check" + (sunLocked ? " skip-active" : "");
+      skipSunBtn.textContent = sunLocked ? "\u2715" : "";
+
+      const extraBoard = document.getElementById("extraBoard");
+      extraBoard.innerHTML = "";
+      if (wEntry.mode !== "sophie") {
+        WEEKEND_EXTRA_ITEMS.forEach((item, idx) => {
+          const row = Math.floor(idx / 2), col = idx % 2;
+          const dark = (row + col) % 2 === 1;
+          const checked = !!wEntry.extra[item.key];
+          const btn = document.createElement("button");
+          btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>`;
+          btn.addEventListener("click", () => {
+            const wasChecked = !!wEntry.extra[item.key];
+            wEntry.extra[item.key] = !wasChecked;
+            saveJSON(WEEKEND_KEY, weekendData);
+            if (!wasChecked) {
+              const wkEntry = getWeekEntry(viewWeekKey);
+              if (item.key === "meditationSession") wkEntry.meditationCount = Math.min(MEDITATION_TARGET, wkEntry.meditationCount + 1);
+              saveJSON(WEEK_KEY, weekData);
+            }
+            render();
+          });
+          extraBoard.appendChild(btn);
+        });
+      }
+
+      document.getElementById("resetLabel").textContent = wEntry.mode === "sophie" ? "Reset (pared down)" : "Weekly reset";
+      const resetItems = wEntry.mode === "sophie" ? SOPHIE_RESET_ITEMS : REGULAR_RESET_ITEMS;
+      const resetList = document.getElementById("resetList");
+      resetList.innerHTML = "";
+      resetItems.forEach(item => {
+        const checked = !!wEntry.reset[item.key];
+        const label = document.createElement("label");
+        label.className = "reset-row";
+        label.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><span style="margin-right:6px;">${item.emoji}</span>${escapeHTML(item.label)}`;
+        label.querySelector("input").addEventListener("change", () => {
+          wEntry.reset[item.key] = !wEntry.reset[item.key];
+          saveJSON(WEEKEND_KEY, weekendData);
+          render();
+        });
+        resetList.appendChild(label);
+      });
+    }
+
+    // history strip (always anchored to real today)
+    const strip = document.getElementById("historyStrip");
+    strip.innerHTML = "";
+    last7Days(realToday).forEach(d => {
+      const key = toDateKey(d);
+      const isW = isWeekendDay(d);
+      let skipped = false;
+      let ratio = 0;
+      if (isW) {
+        const wk = weekendData[weekKeyOf(d)];
+        const isSat = d.getDay() === 6;
+        if (wk) {
+          skipped = isSat ? !!wk.skipSat : !!wk.skipSun;
+          const part = isSat ? wk.sat : wk.sun;
+          const done = part ? WEEKEND_DUAL_ITEMS.filter(i => part[i.key]).length : 0;
+          ratio = done > 0 ? 0.5 : 0;
+        }
+      } else {
+        const rec = dayData[key];
+        skipped = !!(rec && rec.skip);
+        const done = rec ? Object.values(rec.checks || {}).filter(Boolean).length : 0;
+        ratio = done / WEEKDAY_ITEMS.length;
+      }
+      const isTodayCol = key === toDateKey(realToday);
+      const isViewedCol = sameDate(d, viewDate);
+      const col = document.createElement("button");
+      col.className = "history-col";
+      const bar = document.createElement("div");
+      bar.className = "history-bar";
+      bar.style.height = (skipped ? 20 : Math.max(6, ratio * 32)) + "px";
+      bar.style.background = skipped ? "var(--muted2)" : (isW ? "var(--teal)" : (ratio >= 1 ? "var(--gold)" : ratio > 0 ? "var(--olive)" : "#33465F"));
+      bar.style.outline = isTodayCol ? "1px solid var(--ink)" : (isViewedCol ? "1px solid var(--gold)" : "none");
+      const lbl = document.createElement("div");
+      lbl.className = "history-label";
+      lbl.textContent = d.toLocaleDateString(undefined, { weekday: "narrow" });
+      col.appendChild(bar); col.appendChild(lbl);
+      col.addEventListener("click", () => { viewDate = new Date(d); render(); });
+      strip.appendChild(col);
+    });
+
+    // weekly counters
+    const wk = getWeekEntry(viewWeekKey);
+    renderDots("medDots", wk.meditationCount, MEDITATION_TARGET);
+    renderDots("cookDots", wk.cookingCount, COOKING_TARGET);
+
+    const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
+    const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
+    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">🔥${medStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">🔥${cookStreak}wk</span>` : "");
+  }
+
+  function renderDots(id, count, target) {
+    const el = document.getElementById(id);
+    el.innerHTML = "";
+    for (let i = 0; i < target; i++) {
+      const d = document.createElement("span");
+      d.className = "dot" + (i < count ? " filled" : "");
+      el.appendChild(d);
+    }
+  }
+
+  // ---------- events ----------
+  document.getElementById("prevBtn").addEventListener("click", () => { viewDate = addDays(viewDate, -1); render(); });
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    if (!sameDate(viewDate, realToday)) { viewDate = addDays(viewDate, 1); render(); }
+  });
+  document.getElementById("jumpBtn").addEventListener("click", () => { viewDate = new Date(realToday); render(); });
+
+  document.getElementById("skipDayBtn").addEventListener("click", () => {
+    const entry = getDayEntry(toDateKey(viewDate));
+    entry.skip = !entry.skip;
+    saveJSON(DAY_KEY, dayData); render();
+  });
+  document.getElementById("skipSatBtn").addEventListener("click", () => {
+    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
+    wEntry.skipSat = !wEntry.skipSat;
+    saveJSON(WEEKEND_KEY, weekendData); render();
+  });
+  document.getElementById("skipSunBtn").addEventListener("click", () => {
+    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
+    wEntry.skipSun = !wEntry.skipSun;
+    saveJSON(WEEKEND_KEY, weekendData); render();
+  });
+
+  document.getElementById("regularBtn").addEventListener("click", () => {
+    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
+    wEntry.mode = "regular"; saveJSON(WEEKEND_KEY, weekendData); render();
+  });
+  document.getElementById("sophieBtn").addEventListener("click", () => {
+    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
+    wEntry.mode = "sophie"; saveJSON(WEEKEND_KEY, weekendData); render();
+  });
+
+  document.getElementById("medPlus").addEventListener("click", () => {
+    const wk = getWeekEntry(weekKeyOf(viewDate));
+    wk.meditationCount = Math.min(MEDITATION_TARGET, wk.meditationCount + 1);
+    saveJSON(WEEK_KEY, weekData); render();
+  });
+  document.getElementById("medReset").addEventListener("click", () => {
+    const wk = getWeekEntry(weekKeyOf(viewDate));
+    wk.meditationCount = 0; saveJSON(WEEK_KEY, weekData); render();
+  });
+  document.getElementById("cookPlus").addEventListener("click", () => {
+    const wk = getWeekEntry(weekKeyOf(viewDate));
+    wk.cookingCount = Math.min(COOKING_TARGET, wk.cookingCount + 1);
+    saveJSON(WEEK_KEY, weekData); render();
+  });
+  document.getElementById("cookReset").addEventListener("click", () => {
+    const wk = getWeekEntry(weekKeyOf(viewDate));
+    wk.cookingCount = 0; saveJSON(WEEK_KEY, weekData); render();
+  });
+
+  document.getElementById("exportBtn").addEventListener("click", () => {
+    const wdNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+    const allCols = [
+      ...WEEKDAY_ITEMS.map(i => ({ key: i.key, label: i.label })),
+      ...WORKOUT_ITEMS.map(i => ({ key: i.key, label: `${i.label} (${wdNames[i.weekday]})` })),
+      { key: WORKOUT_TOSSUP.key, label: `${WORKOUT_TOSSUP.label} (Fri)` },
+    ];
+    const rows = [["date", ...allCols.map(i => i.label)]];
+    Object.keys(dayData).sort().forEach(date => {
+      const entry = dayData[date] || { checks: {} };
+      rows.push([date, ...allCols.map(i => entry.checks[i.key] ? "1" : "0")]);
+    });
+    const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = "weekly-board-export.csv"; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  render();
+</script>
+</body>
+</html>
