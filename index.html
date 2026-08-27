@@ -299,8 +299,10 @@
       const thuItem = WORKOUT_ITEMS.find(w => w.weekday === 4);
       const wedEntry = dayData[toDateKey(wedDate)];
       const thuEntry = dayData[toDateKey(thuDate)];
-      const wedMissed = !(wedEntry && wedEntry.checks && wedEntry.checks[wedItem.key]);
-      const thuMissed = !(thuEntry && thuEntry.checks && thuEntry.checks[thuItem.key]);
+      const wedSkipped = !!(wedEntry && wedEntry.skip);
+      const thuSkipped = !!(thuEntry && thuEntry.skip);
+      const wedMissed = !wedSkipped && !(wedEntry && wedEntry.checks && wedEntry.checks[wedItem.key]);
+      const thuMissed = !thuSkipped && !(thuEntry && thuEntry.checks && thuEntry.checks[thuItem.key]);
       if (wedMissed && thuMissed) {
         return [{ item: WORKOUT_TOSSUP, dateKey: toDateKey(viewDate), isMakeup: true }];
       }
@@ -326,8 +328,8 @@
 
   // ---------- rotating chore pool ----------
   // All 5 chores share one queue in a fixed order. Each weekday, the first
-  // ELIGIBLE item in the queue is shown — trash is only eligible Wed/Thu/Fri
-  // (pickup window), so on Mon/Tue it's skipped over without losing its
+  // ELIGIBLE item in the queue is shown — trash is only eligible Thu/Fri
+  // (pickup window), so on Mon/Tue/Wed it's skipped over without losing its
   // place, and the next eligible item behind it is offered instead. A chore
   // only advances (gets removed from the front of the line, with a fresh
   // item added to the back) once it's actually checked off — an unchecked or
