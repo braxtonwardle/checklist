@@ -90,28 +90,12 @@
   }
   .skip-btn.active { background: #2A2038; color: var(--gold); border-color: var(--gold); }
 
-  .dual-check:disabled { opacity: .3; cursor: default; }
-  .dual-check.skip-active { background: var(--muted2); border-color: var(--muted2); color: var(--bg); }
-
   .mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
   .mode-btn {
     flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line2);
     background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
   }
   .mode-btn.active { background: #182A4A; color: var(--ink); border-color: var(--gold); }
-
-  .dual-list { background: var(--panel); border-radius: 10px; padding: 8px 12px; margin-bottom: 14px; }
-  .dual-header { display: flex; align-items: center; padding-bottom: 4px; }
-  .dual-header span { width: 34px; text-align: center; color: var(--muted2); font-size: 11px; letter-spacing: .08em; }
-  .dual-row { display: flex; align-items: center; padding: 7px 0; border-top: 1px solid var(--line); }
-  .dual-row:first-of-type { border-top: none; }
-  .dual-label { flex: 1; color: var(--ink); font-size: 13.5px; }
-  .dual-check {
-    width: 24px; height: 24px; border-radius: 6px; border: 1.5px solid var(--line2);
-    margin-left: 5px; cursor: pointer; color: #16213E; font-size: 13px; font-weight: 700;
-    line-height: 21px; background: transparent; font-family: inherit;
-  }
-  .dual-check.checked { background: var(--gold); border-color: var(--gold); }
 
   .cluster-label {
     color: var(--muted2); font-size: 11px; letter-spacing: .12em; font-weight: 600;
@@ -178,18 +162,14 @@
   </div>
 
   <div id="weekendView" style="display:none;">
+    <div class="progress-row"><span class="progress" id="weekendProgress"></span></div>
+    <div class="board" id="weekendBoard"></div>
+    <button class="skip-btn" id="skipWeekendBtn">🤒 Sick / vacation — skip today</button>
+
+    <div class="cluster-label">Weekend</div>
     <div class="mode-row">
       <button class="mode-btn" id="regularBtn">Weekend</button>
       <button class="mode-btn" id="sophieBtn">Sophie weekend</button>
-    </div>
-    <div class="dual-list">
-      <div class="dual-header"><span style="flex:1;"></span><span>Sat</span><span>Sun</span></div>
-      <div id="dualList"></div>
-      <div class="dual-row" style="border-top:1px solid var(--line);">
-        <span class="dual-label"><span style="margin-right:6px;">🤒</span>Sick / vacation</span>
-        <button class="dual-check" id="skipSatBtn" title="Skip Saturday"></button>
-        <button class="dual-check" id="skipSunBtn" title="Skip Sunday"></button>
-      </div>
     </div>
     <div class="board" id="extraBoard"></div>
     <div class="cluster-label" id="resetLabel"></div>
@@ -219,9 +199,12 @@
   </div>
 
   <div class="footer-actions">
-    <button class="footer-btn" id="exportBtn">Export data</button>
+    <button class="footer-btn" id="exportBtn">Export CSV</button>
+    <button class="footer-btn" id="backupBtn">Download backup</button>
+    <button class="footer-btn" id="restoreBtn">Restore backup</button>
+    <input type="file" id="restoreInput" accept="application/json" style="display:none;">
   </div>
-  <div class="tiny">Saves locally in this browser only. Export occasionally if you care about keeping history long-term.</div>
+  <div class="tiny">Saves locally in this browser only. Download a backup occasionally so a cleared browser or new device doesn't lose your history.</div>
 </div>
 
 <script>
@@ -539,14 +522,7 @@
     // nav
     document.getElementById("nextBtn").disabled = isToday;
     document.getElementById("jumpBtn").style.display = isToday ? "none" : "inline";
-    if (viewWeekend) {
-      const monday = mondayOf(viewDate);
-      const sat = addDays(monday, 5), sun = addDays(monday, 6);
-      const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
-      document.getElementById("navDate").textContent = fmt(sat) + " \u2013 " + fmt(sun);
-    } else {
-      document.getElementById("navDate").textContent = viewDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
-    }
+    document.getElementById("navDate").textContent = viewDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
 
     document.getElementById("weekdayView").style.display = viewWeekend ? "none" : "block";
     document.getElementById("weekendView").style.display = viewWeekend ? "block" : "none";
@@ -610,41 +586,38 @@
       skipBtn.textContent = skipped ? "🤒 Skipped — tap to undo" : "🤒 Sick / vacation — skip today";
     } else {
       const wEntry = getWeekendEntry(viewWeekKey);
-      document.getElementById("regularBtn").className = "mode-btn" + (wEntry.mode !== "sophie" ? " active" : "");
-      document.getElementById("sophieBtn").className = "mode-btn" + (wEntry.mode === "sophie" ? " active" : "");
+      const part = viewDate.getDay() === 6 ? "sat" : "sun";
+      const skipKey = part === "sat" ? "skipSat" : "skipSun";
+      const skipped = !!wEntry[skipKey];
+      const dayChecks = wEntry[part];
 
-      const satLocked = !!wEntry.skipSat;
-      const sunLocked = !!wEntry.skipSun;
+      const done = WEEKEND_DUAL_ITEMS.filter(i => dayChecks[i.key]).length;
+      document.getElementById("weekendProgress").textContent = skipped ? "Skipped \u2014 sick / vacation" : (done + "/" + WEEKEND_DUAL_ITEMS.length);
 
-      const dualList = document.getElementById("dualList");
-      dualList.innerHTML = "";
-      WEEKEND_DUAL_ITEMS.forEach(item => {
-        const row = document.createElement("div");
-        row.className = "dual-row";
-        const satChecked = !!wEntry.sat[item.key];
-        const sunChecked = !!wEntry.sun[item.key];
-        row.innerHTML = `
-          <span class="dual-label"><span style="margin-right:6px;">${item.emoji}</span>${escapeHTML(item.label)}</span>
-          <button class="dual-check ${satChecked ? "checked" : ""}" data-part="sat" data-key="${item.key}" ${satLocked ? "disabled" : ""}>${satChecked ? "\u2713" : ""}</button>
-          <button class="dual-check ${sunChecked ? "checked" : ""}" data-part="sun" data-key="${item.key}" ${sunLocked ? "disabled" : ""}>${sunChecked ? "\u2713" : ""}</button>
-        `;
-        dualList.appendChild(row);
-      });
-      dualList.querySelectorAll(".dual-check").forEach(btn => {
+      const weekendBoard = document.getElementById("weekendBoard");
+      weekendBoard.innerHTML = "";
+      WEEKEND_DUAL_ITEMS.forEach((item, idx) => {
+        const row = Math.floor(idx / 2), col = idx % 2;
+        const dark = (row + col) % 2 === 1;
+        const checked = !!dayChecks[item.key];
+        const btn = document.createElement("button");
+        btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+        btn.disabled = skipped;
+        btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>`;
         btn.addEventListener("click", () => {
-          const part = btn.dataset.part, key = btn.dataset.key;
-          wEntry[part][key] = !wEntry[part][key];
+          dayChecks[item.key] = !dayChecks[item.key];
           saveJSON(WEEKEND_KEY, weekendData);
           render();
         });
+        weekendBoard.appendChild(btn);
       });
 
-      const skipSatBtn = document.getElementById("skipSatBtn");
-      const skipSunBtn = document.getElementById("skipSunBtn");
-      skipSatBtn.className = "dual-check" + (satLocked ? " skip-active" : "");
-      skipSatBtn.textContent = satLocked ? "\u2715" : "";
-      skipSunBtn.className = "dual-check" + (sunLocked ? " skip-active" : "");
-      skipSunBtn.textContent = sunLocked ? "\u2715" : "";
+      const skipWeekendBtn = document.getElementById("skipWeekendBtn");
+      skipWeekendBtn.className = "skip-btn" + (skipped ? " active" : "");
+      skipWeekendBtn.textContent = skipped ? "\ud83e\udd12 Skipped \u2014 tap to undo" : "\ud83e\udd12 Sick / vacation \u2014 skip today";
+
+      document.getElementById("regularBtn").className = "mode-btn" + (wEntry.mode !== "sophie" ? " active" : "");
+      document.getElementById("sophieBtn").className = "mode-btn" + (wEntry.mode === "sophie" ? " active" : "");
 
       const extraBoard = document.getElementById("extraBoard");
       extraBoard.innerHTML = "";
@@ -704,7 +677,7 @@
           skipped = isSat ? !!wk.skipSat : !!wk.skipSun;
           const part = isSat ? wk.sat : wk.sun;
           const done = part ? WEEKEND_DUAL_ITEMS.filter(i => part[i.key]).length : 0;
-          ratio = done > 0 ? 0.5 : 0;
+          ratio = done / WEEKEND_DUAL_ITEMS.length;
         }
       } else {
         const rec = dayData[key];
@@ -762,14 +735,10 @@
     entry.skip = !entry.skip;
     saveJSON(DAY_KEY, dayData); render();
   });
-  document.getElementById("skipSatBtn").addEventListener("click", () => {
+  document.getElementById("skipWeekendBtn").addEventListener("click", () => {
     const wEntry = getWeekendEntry(weekKeyOf(viewDate));
-    wEntry.skipSat = !wEntry.skipSat;
-    saveJSON(WEEKEND_KEY, weekendData); render();
-  });
-  document.getElementById("skipSunBtn").addEventListener("click", () => {
-    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
-    wEntry.skipSun = !wEntry.skipSun;
+    const key = viewDate.getDay() === 6 ? "skipSat" : "skipSun";
+    wEntry[key] = !wEntry[key];
     saveJSON(WEEKEND_KEY, weekendData); render();
   });
 
@@ -819,6 +788,43 @@
     const a = document.createElement("a");
     a.href = url; a.download = "weekly-board-export.csv"; a.click();
     URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("backupBtn").addEventListener("click", () => {
+    const backup = { version: 1, exportedAt: new Date().toISOString(), day: dayData, weekend: weekendData, week: weekData };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `weekly-board-backup-${toDateKey(new Date())}.json`; a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById("restoreBtn").addEventListener("click", () => {
+    document.getElementById("restoreInput").click();
+  });
+  document.getElementById("restoreInput").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      let backup;
+      try { backup = JSON.parse(reader.result); }
+      catch (err) { alert("That file isn't valid backup JSON."); return; }
+      if (!backup || typeof backup !== "object" || !backup.day || !backup.weekend || !backup.week) {
+        alert("That file doesn't look like a Weekly Board backup.");
+        return;
+      }
+      if (!confirm("This replaces all data currently saved in this browser with the backup file. Continue?")) return;
+      dayData = backup.day;
+      weekendData = backup.weekend;
+      weekData = backup.week;
+      saveJSON(DAY_KEY, dayData);
+      saveJSON(WEEKEND_KEY, weekendData);
+      saveJSON(WEEK_KEY, weekData);
+      render();
+    };
+    reader.readAsText(file);
   });
 
   render();
