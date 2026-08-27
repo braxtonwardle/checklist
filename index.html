@@ -174,6 +174,11 @@
     <div class="board" id="extraBoard"></div>
     <div class="cluster-label" id="resetLabel"></div>
     <div class="reset-list" id="resetList"></div>
+
+    <div class="weekly" id="recapPanel" style="display:none; margin-top:14px;">
+      <div class="weekly-header">Week recap</div>
+      <div class="tiny" id="recapText" style="margin-top:0;"></div>
+    </div>
   </div>
 
   <div class="history-strip" id="historyStrip"></div>
@@ -204,7 +209,7 @@
     <button class="footer-btn" id="restoreBtn">Restore backup</button>
     <input type="file" id="restoreInput" accept="application/json" style="display:none;">
   </div>
-  <div class="tiny">Saves locally in this browser only. Download a backup occasionally so a cleared browser or new device doesn't lose your history.</div>
+  <div class="tiny">Saves locally in this browser only. <span id="backupStatus"></span></div>
 </div>
 
 <script>
@@ -219,15 +224,20 @@
   }
   function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
 
-  let dayData = loadJSON(DAY_KEY, {});       // { "YYYY-MM-DD": { checks: {} } }
-  let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, sat, sun, extra, reset } }
+  let dayData = loadJSON(DAY_KEY, {});       // { "YYYY-MM-DD": { checks: {} } } — every day, weekday or weekend
+  let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, extra, reset } } — shared across Sat+Sun
   let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, workoutCount } }
+  const LAST_BACKUP_KEY = "wb_lastBackupAt";
 
   // ---------- date helpers ----------
   function toDateKey(d) {
     const off = d.getTimezoneOffset();
     const local = new Date(d.getTime() - off * 60000);
     return local.toISOString().slice(0, 10);
+  }
+  function parseDateKey(key) {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d);
   }
   function mondayOf(d) {
     const day = d.getDay();
@@ -442,9 +452,7 @@
     return dayData[key];
   }
   function getWeekendEntry(key) {
-    if (!weekendData[key]) weekendData[key] = { mode: "regular", sat: {}, sun: {}, extra: {}, reset: {}, skipSat: false, skipSun: false };
-    if (weekendData[key].skipSat === undefined) weekendData[key].skipSat = false;
-    if (weekendData[key].skipSun === undefined) weekendData[key].skipSun = false;
+    if (!weekendData[key]) weekendData[key] = { mode: "regular", extra: {}, reset: {} };
     return weekendData[key];
   }
   function getWeekEntry(key) {
@@ -452,6 +460,38 @@
     if (weekData[key].cookingCount === undefined) weekData[key].cookingCount = 0;
     return weekData[key];
   }
+
+  // ---------- one-time migration: old dual-checkbox weekend schema ----------
+  // Sat/Sun checks and skips used to live on the week's weekendData entry
+  // (wEntry.sat/.sun/.skipSat/.skipSun) from when the weekend view showed both
+  // days merged together. Now that Saturday and Sunday render as individual
+  // days like weekdays, those checks move into dayData under the day's own
+  // date key. Runs once per week entry that still has the old fields; a no-op
+  // after that, since the fields are removed once migrated.
+  function migrateWeekendData() {
+    let changed = false;
+    Object.keys(weekendData).forEach(weekKey => {
+      const wEntry = weekendData[weekKey];
+      if (!wEntry.sat && !wEntry.sun && wEntry.skipSat === undefined && wEntry.skipSun === undefined) return;
+      const monday = parseDateKey(weekKey.slice(3));
+      const satEntry = getDayEntry(toDateKey(addDays(monday, 5)));
+      const sunEntry = getDayEntry(toDateKey(addDays(monday, 6)));
+      Object.assign(satEntry.checks, wEntry.sat || {});
+      Object.assign(sunEntry.checks, wEntry.sun || {});
+      if (wEntry.skipSat) satEntry.skip = true;
+      if (wEntry.skipSun) sunEntry.skip = true;
+      delete wEntry.sat;
+      delete wEntry.sun;
+      delete wEntry.skipSat;
+      delete wEntry.skipSun;
+      changed = true;
+    });
+    if (changed) {
+      saveJSON(DAY_KEY, dayData);
+      saveJSON(WEEKEND_KEY, weekendData);
+    }
+  }
+  migrateWeekendData();
 
   // ---------- streaks ----------
   // Consecutive weekdays (Mon-Fri only) with itemKey checked, walking backward from uptoDate.
@@ -463,6 +503,31 @@
     d.setHours(0, 0, 0, 0);
     for (let guard = 0; guard < 500; guard++) {
       if (isWeekendDay(d)) { d = addDays(d, -1); continue; }
+      const key = toDateKey(d);
+      const entry = dayData[key];
+      if (entry && entry.skip) { d = addDays(d, -1); continue; }
+      const checked = !!(entry && entry.checks[itemKey]);
+      const isRealToday = sameDate(d, realToday);
+      if (checked) {
+        streak++;
+      } else if (isRealToday) {
+        // in-progress day, no verdict yet
+      } else {
+        break;
+      }
+      d = addDays(d, -1);
+    }
+    return streak;
+  }
+
+  // Consecutive weekend days (Sat/Sun only) with itemKey checked, walking backward from uptoDate.
+  // Mirrors weekdayStreak but walks Sat/Sun instead of Mon-Fri.
+  function weekendStreak(itemKey, uptoDate) {
+    let streak = 0;
+    let d = new Date(uptoDate);
+    d.setHours(0, 0, 0, 0);
+    for (let guard = 0; guard < 500; guard++) {
+      if (!isWeekendDay(d)) { d = addDays(d, -1); continue; }
       const key = toDateKey(d);
       const entry = dayData[key];
       if (entry && entry.skip) { d = addDays(d, -1); continue; }
@@ -507,6 +572,14 @@
     return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
   }
 
+  function formatBackupStatus(iso) {
+    if (!iso) return "Never backed up — download one below.";
+    const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+    if (days <= 0) return "Backed up today.";
+    if (days === 1) return "Last backup: 1 day ago.";
+    return `Last backup: ${days} days ago.`;
+  }
+
   // ---------- render ----------
   function render() {
     const viewDateKey = toDateKey(viewDate);
@@ -518,6 +591,8 @@
     const q = dailyQuote(realToday);
     document.getElementById("quoteText").textContent = "\u201C" + q.text + "\u201D";
     document.getElementById("quoteAuthor").textContent = "\u2014 " + q.author;
+
+    document.getElementById("backupStatus").textContent = formatBackupStatus(localStorage.getItem(LAST_BACKUP_KEY));
 
     // nav
     document.getElementById("nextBtn").disabled = isToday;
@@ -586,12 +661,10 @@
       skipBtn.textContent = skipped ? "🤒 Skipped — tap to undo" : "🤒 Sick / vacation — skip today";
     } else {
       const wEntry = getWeekendEntry(viewWeekKey);
-      const part = viewDate.getDay() === 6 ? "sat" : "sun";
-      const skipKey = part === "sat" ? "skipSat" : "skipSun";
-      const skipped = !!wEntry[skipKey];
-      const dayChecks = wEntry[part];
+      const dayEntry = getDayEntry(viewDateKey);
+      const skipped = !!dayEntry.skip;
 
-      const done = WEEKEND_DUAL_ITEMS.filter(i => dayChecks[i.key]).length;
+      const done = WEEKEND_DUAL_ITEMS.filter(i => dayEntry.checks[i.key]).length;
       document.getElementById("weekendProgress").textContent = skipped ? "Skipped \u2014 sick / vacation" : (done + "/" + WEEKEND_DUAL_ITEMS.length);
 
       const weekendBoard = document.getElementById("weekendBoard");
@@ -599,14 +672,16 @@
       WEEKEND_DUAL_ITEMS.forEach((item, idx) => {
         const row = Math.floor(idx / 2), col = idx % 2;
         const dark = (row + col) % 2 === 1;
-        const checked = !!dayChecks[item.key];
+        const checked = !!dayEntry.checks[item.key];
+        const streak = weekendStreak(item.key, viewDate);
         const btn = document.createElement("button");
         btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
         btn.disabled = skipped;
-        btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>`;
+        btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
+          (streak > 0 ? `<span class="streak-badge">\ud83d\udd25${streak}</span>` : "");
         btn.addEventListener("click", () => {
-          dayChecks[item.key] = !dayChecks[item.key];
-          saveJSON(WEEKEND_KEY, weekendData);
+          dayEntry.checks[item.key] = !dayEntry.checks[item.key];
+          saveJSON(DAY_KEY, dayData);
           render();
         });
         weekendBoard.appendChild(btn);
@@ -660,6 +735,34 @@
         });
         resetList.appendChild(label);
       });
+
+      const recapPanel = document.getElementById("recapPanel");
+      if (viewDate.getDay() === 0) {
+        recapPanel.style.display = "block";
+        const monday = mondayOf(viewDate);
+        let fullDays = 0, partialDays = 0, skippedDays = 0;
+        for (let i = 0; i < 5; i++) {
+          const d = addDays(monday, i);
+          const dEntry = dayData[toDateKey(d)];
+          if (dEntry && dEntry.skip) { skippedDays++; continue; }
+          const workoutSlot = getWorkoutSlot(d);
+          const workoutEntry = dayData[workoutSlot.dateKey];
+          const workoutChecked = !!(workoutEntry && workoutEntry.checks[workoutSlot.item.key]);
+          const staticDone = dEntry ? WEEKDAY_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
+          const dayDone = staticDone + (workoutChecked ? 1 : 0);
+          if (dayDone >= WEEKDAY_ITEMS.length + 1) fullDays++;
+          else if (dayDone > 0) partialDays++;
+        }
+        const weekEntry = getWeekEntry(viewWeekKey);
+        const parts = [`${fullDays}/5 full weekdays`];
+        if (partialDays) parts.push(`${partialDays} partial`);
+        if (skippedDays) parts.push(`${skippedDays} skipped`);
+        parts.push(`🧘 ${weekEntry.meditationCount}/${MEDITATION_TARGET}`);
+        parts.push(`🍳 ${weekEntry.cookingCount}/${COOKING_TARGET}`);
+        document.getElementById("recapText").textContent = parts.join(" · ");
+      } else {
+        recapPanel.style.display = "none";
+      }
     }
 
     // history strip (always anchored to real today)
@@ -668,23 +771,10 @@
     last7Days(realToday).forEach(d => {
       const key = toDateKey(d);
       const isW = isWeekendDay(d);
-      let skipped = false;
-      let ratio = 0;
-      if (isW) {
-        const wk = weekendData[weekKeyOf(d)];
-        const isSat = d.getDay() === 6;
-        if (wk) {
-          skipped = isSat ? !!wk.skipSat : !!wk.skipSun;
-          const part = isSat ? wk.sat : wk.sun;
-          const done = part ? WEEKEND_DUAL_ITEMS.filter(i => part[i.key]).length : 0;
-          ratio = done / WEEKEND_DUAL_ITEMS.length;
-        }
-      } else {
-        const rec = dayData[key];
-        skipped = !!(rec && rec.skip);
-        const done = rec ? Object.values(rec.checks || {}).filter(Boolean).length : 0;
-        ratio = done / WEEKDAY_ITEMS.length;
-      }
+      const rec = dayData[key];
+      const skipped = !!(rec && rec.skip);
+      const done = rec ? Object.values(rec.checks || {}).filter(Boolean).length : 0;
+      const ratio = done / (isW ? WEEKEND_DUAL_ITEMS.length : WEEKDAY_ITEMS.length);
       const isTodayCol = key === toDateKey(realToday);
       const isViewedCol = sameDate(d, viewDate);
       const col = document.createElement("button");
@@ -736,10 +826,9 @@
     saveJSON(DAY_KEY, dayData); render();
   });
   document.getElementById("skipWeekendBtn").addEventListener("click", () => {
-    const wEntry = getWeekendEntry(weekKeyOf(viewDate));
-    const key = viewDate.getDay() === 6 ? "skipSat" : "skipSun";
-    wEntry[key] = !wEntry[key];
-    saveJSON(WEEKEND_KEY, weekendData); render();
+    const entry = getDayEntry(toDateKey(viewDate));
+    entry.skip = !entry.skip;
+    saveJSON(DAY_KEY, dayData); render();
   });
 
   document.getElementById("regularBtn").addEventListener("click", () => {
@@ -797,6 +886,8 @@
     const a = document.createElement("a");
     a.href = url; a.download = `weekly-board-backup-${toDateKey(new Date())}.json`; a.click();
     URL.revokeObjectURL(url);
+    localStorage.setItem(LAST_BACKUP_KEY, new Date().toISOString());
+    render();
   });
 
   document.getElementById("restoreBtn").addEventListener("click", () => {
@@ -819,6 +910,7 @@
       dayData = backup.day;
       weekendData = backup.weekend;
       weekData = backup.week;
+      migrateWeekendData();
       saveJSON(DAY_KEY, dayData);
       saveJSON(WEEKEND_KEY, weekendData);
       saveJSON(WEEK_KEY, weekData);
