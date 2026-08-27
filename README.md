@@ -10,12 +10,13 @@ Live at: `https://<your-username>.github.io/<repo-name>/`
 - **Weekday checklist** — a fixed set of daily items (wake time, water, dog walk, sleep, chess study, a rotating chore, phone/bedtime), plus a dedicated workout slot
 - **Scheduled workout days** — Monday/Wednesday/Thursday, each tied to a specific lift/cycle day. A missed day gets one shot at a makeup the next eligible day; Friday can absorb a missed Wednesday or Thursday (or become a free-choice "catch-up" day if both were missed). Tuesday is always a rest day — no exceptions, no makeup slot.
 - **Rotating chore pool** — cycles through a small set of chores rather than one static "clean" item; a trash-specific chore is restricted to its actual pickup window so it never shows up on a day it can't be done.
-- **Weekend mode** — a separate Saturday/Sunday view with dual-checkboxes per item, plus an alternate lighter mode for weekends with reduced obligations.
+- **Weekend mode** — Saturday and Sunday each render as their own day, with their own progress count and sick/vacation skip, while a set of extra items and a weekly reset checklist stay shared across the whole weekend. A "Sophie weekend" mode swaps in a lighter, pared-down reset list.
 - **Weekly counters** — meditation and home-cooked-meals targets (×3/week), tracked as dot progress rather than daily checkboxes.
 - **Streaks** — shown per daily item and per weekly counter. A day marked "sick / traveling" pauses a streak instead of breaking it; an in-progress day/week is never treated as a miss before it's actually over.
 - **Daily quote** — rotates by calendar date from a fixed bank of real, attributed quotes (no AI-generated or "in the style of" content — every attributed line is genuine).
 - **7-day history strip** — at-a-glance view of recent completion, with distinct styling for skipped/sick days.
-- **CSV export** — pulls full history out of `localStorage` for backup or review elsewhere.
+- **CSV export** — pulls the weekday checklist history out of `localStorage` for review elsewhere.
+- **JSON backup/restore** — downloads the complete app state (weekday, weekend, and weekly-counter data) as one file, and can reload it back in, so a cleared browser or a new device doesn't lose history.
 
 ## Tech
 
