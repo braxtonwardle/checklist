@@ -723,22 +723,26 @@
       if (viewDate.getDay() === 0) {
         recapPanel.style.display = "block";
         const monday = mondayOf(viewDate);
-        let fullDays = 0, partialDays = 0, skippedDays = 0;
-        for (let i = 0; i < 5; i++) {
+        let totalDone = 0, totalPossible = 0, skippedDays = 0;
+        for (let i = 0; i < 7; i++) {
           const d = addDays(monday, i);
           const dEntry = dayData[toDateKey(d)];
           if (dEntry && dEntry.skip) { skippedDays++; continue; }
-          const workoutSlot = getWorkoutSlot(d);
-          const workoutEntry = dayData[workoutSlot.dateKey];
-          const workoutChecked = !!(workoutEntry && workoutEntry.checks[workoutSlot.item.key]);
-          const staticDone = dEntry ? WEEKDAY_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
-          const dayDone = staticDone + (workoutChecked ? 1 : 0);
-          if (dayDone >= WEEKDAY_ITEMS.length + 1) fullDays++;
-          else if (dayDone > 0) partialDays++;
+          if (isWeekendDay(d)) {
+            totalDone += dEntry ? WEEKEND_DUAL_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
+            totalPossible += WEEKEND_DUAL_ITEMS.length;
+          } else {
+            const workoutSlot = getWorkoutSlot(d);
+            const workoutEntry = dayData[workoutSlot.dateKey];
+            const workoutChecked = !!(workoutEntry && workoutEntry.checks[workoutSlot.item.key]);
+            const staticDone = dEntry ? WEEKDAY_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
+            totalDone += staticDone + (workoutChecked ? 1 : 0);
+            totalPossible += WEEKDAY_ITEMS.length + 1;
+          }
         }
+        const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
         const weekEntry = getWeekEntry(viewWeekKey);
-        const parts = [`${fullDays}/5 full weekdays`];
-        if (partialDays) parts.push(`${partialDays} partial`);
+        const parts = [`${pct}% this week (${totalDone}/${totalPossible})`];
         if (skippedDays) parts.push(`${skippedDays} skipped`);
         parts.push(`🧘 ${weekEntry.meditationCount}/${MEDITATION_TARGET}`);
         parts.push(`🍳 ${weekEntry.cookingCount}/${COOKING_TARGET}`);
