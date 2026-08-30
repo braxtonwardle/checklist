@@ -19,6 +19,7 @@
     --muted: #8FA0C4;
     --muted2: #6E80A8;
     --gold: #D4A24C;
+    --gold-bright: #F2C572;
     --navy-square: #16213E;
     --ivory-square: #DED6C4;
     --teal: #4C6A73;
@@ -75,6 +76,7 @@
     justify-content: center; gap: 5px; border: none; cursor: pointer;
     padding: 10px 8px; text-align: center; font-family: inherit;
   }
+  .square.has-streak { padding-bottom: 18px; }
   .square .emoji { font-size: 17px; line-height: 1; }
   .square .label { font-size: 12px; line-height: 1.25; }
   .sq-dark { background: var(--navy-square); color: var(--ink); }
@@ -82,10 +84,10 @@
   .sq-checked { box-shadow: inset 0 0 0 3px var(--gold); }
   .streak-badge {
     position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; line-height: 1; color: var(--gold); font-weight: 700;
-    background: rgba(0, 0, 0, .35); border-radius: 8px; padding: 2px 6px;
+    font-size: 11px; line-height: 1; color: var(--gold-bright); font-weight: 700;
   }
-  .streak-mini { font-size: 10px; opacity: .9; margin-left: 5px; color: var(--gold); font-weight: 600; }
+  .streak-star { font-size: 1.3em; vertical-align: -1px; }
+  .streak-mini { font-size: 10px; opacity: .9; margin-left: 5px; color: var(--gold-bright); font-weight: 600; }
 
   .square:disabled { opacity: .35; cursor: default; }
 
@@ -593,10 +595,10 @@
           const todaysChore = item.key === "clean" ? getChoreForDate(viewDate) : null;
           const displayLabel = todaysChore ? todaysChore.label : item.label;
           const displayEmoji = todaysChore ? todaysChore.emoji : item.emoji;
-          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
-            (streak > 0 ? `<span class="streak-badge">★${streak}</span>` : "");
+            (streak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${streak}</span>` : "");
           btn.addEventListener("click", () => {
             entry.checks[item.key] = !entry.checks[item.key];
             saveJSON(DAY_KEY, dayData);
@@ -628,10 +630,10 @@
         const checked = !!dayEntry.checks[item.key];
         const streak = weekendStreak(item.key, viewDate);
         const btn = document.createElement("button");
-        btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
+        btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
         btn.disabled = skipped;
         btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
-          (streak > 0 ? `<span class="streak-badge">★${streak}</span>` : "");
+          (streak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${streak}</span>` : "");
         btn.addEventListener("click", () => {
           dayEntry.checks[item.key] = !dayEntry.checks[item.key];
           saveJSON(DAY_KEY, dayData);
@@ -735,8 +737,8 @@
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">★${medStreak}wk</span>` : "");
-    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">★${cookStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
   }
 
   function renderDots(id, count, target) {
