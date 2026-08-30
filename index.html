@@ -41,16 +41,6 @@
   .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
   .quote-block { margin-bottom: 16px; text-align: center; }
-  .quote-block::before {
-    content: "\201C";
-    display: block;
-    text-align: center;
-    font-size: 40px;
-    color: var(--gold);
-    opacity: .3;
-    line-height: .6;
-    margin-bottom: -6px;
-  }
   .quote-text { color: var(--quote-ink); font-size: 12.5px; line-height: 1.4; font-style: italic; }
   .quote-author { color: var(--muted2); font-size: 11px; margin-top: 4px; }
 
@@ -89,7 +79,7 @@
   .square .label { font-size: 12px; line-height: 1.25; }
   .sq-dark { background: var(--navy-square); color: var(--ink); }
   .sq-light { background: var(--ivory-square); color: var(--navy-square); }
-  .sq-checked { box-shadow: inset 0 0 0 2px var(--gold); }
+  .sq-checked { box-shadow: inset 0 0 0 3px var(--gold); }
   .sq-checked::after {
     content: "\2713";
     position: absolute;
@@ -334,14 +324,14 @@
     return [];
   }
 
-  const REST_ITEM = { key: "restDay", label: "Rest day", emoji: "🌿" };
+  const MOBILITY_ITEM = { key: "mobility", label: "Mobility", emoji: "🤸" };
   // Resolves the single workout-slot square for a given day: a scheduled
   // workout, a makeup, the Friday toss-up, or — if none of those apply —
-  // a plain checkable "Rest day" square, so the slot is never empty.
+  // a plain checkable "Mobility" square, so the slot is never empty.
   function getWorkoutSlot(viewDate) {
     const visible = getVisibleWorkoutItems(viewDate);
     if (visible.length > 0) return visible[0];
-    return { item: REST_ITEM, dateKey: toDateKey(viewDate), isMakeup: false };
+    return { item: MOBILITY_ITEM, dateKey: toDateKey(viewDate), isMakeup: false };
   }
 
   // ---------- rotating chore pool ----------
@@ -393,7 +383,7 @@
     { key: "water", label: "Water first", emoji: "💧" },
     { key: "phoneMorning", label: "No phone first hour", emoji: "🔕" },
     { key: "lucy", label: "Lucy walked", emoji: "🐾" },
-    { key: "mobility", label: "Stretched / mobility work", emoji: "🤸" },
+    MOBILITY_ITEM,
     { key: "phone", label: "Phone outside room", emoji: "📵" },
     { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
   ];
@@ -615,7 +605,7 @@
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
           btn.disabled = skipped;
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
-            (streak > 0 ? `<span class="streak-badge">${streak}</span>` : "");
+            (streak > 0 ? `<span class="streak-badge">★${streak}</span>` : "");
           btn.addEventListener("click", () => {
             entry.checks[item.key] = !entry.checks[item.key];
             saveJSON(DAY_KEY, dayData);
@@ -650,7 +640,7 @@
         btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
         btn.disabled = skipped;
         btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
-          (streak > 0 ? `<span class="streak-badge">${streak}</span>` : "");
+          (streak > 0 ? `<span class="streak-badge">★${streak}</span>` : "");
         btn.addEventListener("click", () => {
           dayEntry.checks[item.key] = !dayEntry.checks[item.key];
           saveJSON(DAY_KEY, dayData);
@@ -754,8 +744,8 @@
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">${medStreak}wk</span>` : "");
-    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">${cookStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">★${medStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">★${cookStreak}wk</span>` : "");
   }
 
   function renderDots(id, count, target) {
