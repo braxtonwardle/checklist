@@ -214,6 +214,14 @@
         <button class="small-btn-ghost" id="cookReset">reset</button>
       </div>
     </div>
+    <div class="weekly-row">
+      <span class="weekly-label">🧗 Climbing/Lifting</span>
+      <div class="dots" id="liftDots"></div>
+    </div>
+    <div class="weekly-row">
+      <span class="weekly-label">🚴 Cycling</span>
+      <div class="dots" id="cycleDots"></div>
+    </div>
   </div>
 
   <div class="footer-actions">
@@ -273,58 +281,34 @@
     { key: "phoneBed", label: "Phone out, bed by 10:30", emoji: "📵" },
   ];
 
-  // ---------- scheduled workout days (Mon/Wed/Thu), with one day of grace ----------
-  // Each item is tied to a specific weekday and its own persistent key. If the
-  // scheduled day passes unchecked, a single "Makeup" square appears the
-  // following day only — checking it writes back to the ORIGINAL day's entry
-  // (not today's), so streak/history stay accurate to when it was scheduled.
-  const WORKOUT_ITEMS = [
-    { weekday: 1, key: "gym1", label: "Gym (bouldering + lifting)", emoji: "🧗" }, // Monday
-    { weekday: 3, key: "cycle", label: "Cycling", emoji: "🚴" },                    // Wednesday
-    { weekday: 4, key: "gym2", label: "Gym (bouldering + lifting)", emoji: "🧗" },  // Thursday
+  // ---------- activity square (weekday and weekend) ----------
+  // A single square, every day, cycling through three types on repeated taps
+  // rather than a day-locked schedule: no day is pre-assigned to a specific
+  // workout, so doing cycling on a Saturday or mobility instead of lifting on
+  // a Thursday is just what happened that day, not a miss needing a makeup.
+  const ACTIVITY_TYPES = [
+    { key: "mobility", label: "Mobility", emoji: "🤸" },
+    { key: "lifting", label: "Climbing/Lifting", emoji: "🧗" },
+    { key: "cycling", label: "Cycling", emoji: "🚴" },
   ];
-  const WORKOUT_TOSSUP = { key: "workoutToss", label: "Catch-up workout (your choice)", emoji: "🔀" };
-
-  function getVisibleWorkoutItems(viewDate) {
-    const wd = viewDate.getDay();
-    const todayItem = WORKOUT_ITEMS.find(w => w.weekday === wd);
-    if (todayItem) {
-      return [{ item: todayItem, dateKey: toDateKey(viewDate), isMakeup: false }];
-    }
-
-    if (wd === 5) { // Friday — can absorb a missed Wed and/or Thu
-      const wedDate = addDays(viewDate, -2);
-      const thuDate = addDays(viewDate, -1);
-      const wedItem = WORKOUT_ITEMS.find(w => w.weekday === 3);
-      const thuItem = WORKOUT_ITEMS.find(w => w.weekday === 4);
-      const wedEntry = dayData[toDateKey(wedDate)];
-      const thuEntry = dayData[toDateKey(thuDate)];
-      const wedSkipped = !!(wedEntry && wedEntry.skip);
-      const thuSkipped = !!(thuEntry && thuEntry.skip);
-      const wedMissed = !wedSkipped && !(wedEntry && wedEntry.checks && wedEntry.checks[wedItem.key]);
-      const thuMissed = !thuSkipped && !(thuEntry && thuEntry.checks && thuEntry.checks[thuItem.key]);
-      if (wedMissed && thuMissed) {
-        return [{ item: WORKOUT_TOSSUP, dateKey: toDateKey(viewDate), isMakeup: true }];
-      }
-      if (thuMissed) return [{ item: thuItem, dateKey: toDateKey(thuDate), isMakeup: true }];
-      if (wedMissed) return [{ item: wedItem, dateKey: toDateKey(wedDate), isMakeup: true }];
-      return [];
-    }
-
-    // Tuesday intentionally never shows a workout (chess night, no time) — a
-    // missed Monday just has no makeup; that slot is simply lost.
-    return [];
+  function cycleActivity(entry) {
+    const order = ACTIVITY_TYPES.map(a => a.key);
+    const idx = order.indexOf(entry.checks.activity);
+    if (idx === -1) entry.checks.activity = order[0];
+    else if (idx === order.length - 1) delete entry.checks.activity;
+    else entry.checks.activity = order[idx + 1];
   }
-
-  const MOBILITY_ITEM = { key: "mobility", label: "Mobility", emoji: "🤸" };
-  // Resolves the single workout-slot square for a given day: a scheduled
-  // workout, a makeup, the Friday toss-up, or — if none of those apply —
-  // a plain checkable "Mobility" square, so the slot is never empty.
-  function getWorkoutSlot(viewDate) {
-    const visible = getVisibleWorkoutItems(viewDate);
-    if (visible.length > 0) return visible[0];
-    return { item: MOBILITY_ITEM, dateKey: toDateKey(viewDate), isMakeup: false };
+  function countActivityThisWeek(type, uptoDate) {
+    const monday = mondayOf(uptoDate);
+    let count = 0;
+    for (let i = 0; i < 7; i++) {
+      const entry = dayData[toDateKey(addDays(monday, i))];
+      if (entry && entry.checks.activity === type) count++;
+    }
+    return count;
   }
+  const LIFTING_TARGET = 2;
+  const CYCLING_TARGET = 1;
 
   // ---------- rotating chore pool ----------
   // All 5 chores share one queue in a fixed order. Each weekday, the first
@@ -375,7 +359,6 @@
     { key: "water", label: "Water first", emoji: "💧" },
     { key: "phoneMorning", label: "No phone first hour", emoji: "🔕" },
     { key: "lucy", label: "Lucy walked", emoji: "🐾" },
-    MOBILITY_ITEM,
     { key: "phone", label: "Phone outside room", emoji: "📵" },
     { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
   ];
@@ -492,15 +475,8 @@
   function weekdayStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, d => !isWeekendDay(d)); }
   function weekendStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, isWeekendDay); }
 
-  // Consecutive days (every day of the week) with that day's movement item
-  // checked, regardless of which specific item satisfied it — a scheduled
-  // gym/cycle day, the Friday toss-up, the weekday Mobility fallback, or the
-  // weekend's own Mobility square — one combined streak across the whole week,
-  // since most weekday keys only occur once a week and could never build a
-  // streak on their own. A Friday showing a single-day makeup for a missed
-  // Wed/Thu is skipped rather than scored here, since that square's record
-  // actually belongs to the earlier day (and gets scored there) — otherwise one
-  // completed workout would count twice.
+  // Consecutive days (every day of the week) with any activity type logged —
+  // one combined streak regardless of which of the three types it was.
   function movementStreak(uptoDate) {
     let streak = 0;
     let d = new Date(uptoDate);
@@ -509,14 +485,7 @@
       const key = toDateKey(d);
       const entry = dayData[key];
       if (entry && entry.skip) { d = addDays(d, -1); continue; }
-      let checked;
-      if (isWeekendDay(d)) {
-        checked = !!(entry && entry.checks[MOBILITY_ITEM.key]);
-      } else {
-        const slot = getWorkoutSlot(d);
-        if (slot.dateKey !== key) { d = addDays(d, -1); continue; }
-        checked = !!(entry && entry.checks[slot.item.key]);
-      }
+      const checked = !!(entry && entry.checks.activity);
       const isRealToday = sameDate(d, realToday);
       if (checked) {
         streak++;
@@ -590,11 +559,9 @@
     if (!viewWeekend) {
       const entry = getDayEntry(viewDateKey);
       const skipped = !!entry.skip;
-      const workoutSlot = getWorkoutSlot(viewDate);
-      const workoutEntry = getDayEntry(workoutSlot.dateKey);
-      const workoutChecked = !!workoutEntry.checks[workoutSlot.item.key];
+      const activityChecked = !!entry.checks.activity;
       const staticDone = WEEKDAY_ITEMS.filter(i => entry.checks[i.key]).length;
-      const done = staticDone + (workoutChecked ? 1 : 0);
+      const done = staticDone + (activityChecked ? 1 : 0);
       const dayTotal = WEEKDAY_ITEMS.length + 1;
       document.getElementById("progressTrack").style.display = skipped ? "none" : "block";
       document.getElementById("progressSkipText").style.display = skipped ? "block" : "none";
@@ -603,11 +570,11 @@
 
       const board = document.getElementById("weekdayBoard");
       board.innerHTML = "";
-      // 5 static items, then the workout slot, then the remaining 2 static items —
-      // forms a clean 4-row x 2-col grid with the workout square next to chess study.
+      // 5 static items, then the activity slot, then the remaining 2 static items —
+      // forms a clean 4-row x 2-col grid with the activity square next to chess study.
       const gridItems = [
         ...WEEKDAY_ITEMS.slice(0, 5).map(item => ({ kind: "static", item })),
-        { kind: "workout" },
+        { kind: "activity" },
         ...WEEKDAY_ITEMS.slice(5).map(item => ({ kind: "static", item })),
       ];
       gridItems.forEach((cell, idx) => {
@@ -615,15 +582,17 @@
         const dark = (row + col) % 2 === 1;
         const btn = document.createElement("button");
 
-        if (cell.kind === "workout") {
+        if (cell.kind === "activity") {
+          const activityType = ACTIVITY_TYPES.find(a => a.key === entry.checks.activity);
           const moveStreak = movementStreak(viewDate);
-          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (workoutChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (activityChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
-          const prefix = workoutSlot.isMakeup ? "Makeup: " : "";
-          btn.innerHTML = `<span class="emoji">${workoutSlot.item.emoji}</span><span class="label">${escapeHTML(prefix + workoutSlot.item.label)}</span>` +
+          const displayEmoji = activityType ? activityType.emoji : "💪";
+          const displayLabel = activityType ? activityType.label : "Activity";
+          btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
             (moveStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${moveStreak}</span>` : "");
           btn.addEventListener("click", () => {
-            workoutEntry.checks[workoutSlot.item.key] = !workoutEntry.checks[workoutSlot.item.key];
+            cycleActivity(entry);
             saveJSON(DAY_KEY, dayData);
             render();
           });
@@ -655,29 +624,56 @@
       const dayEntry = getDayEntry(viewDateKey);
       const skipped = !!dayEntry.skip;
 
-      const done = WEEKEND_DUAL_ITEMS.filter(i => dayEntry.checks[i.key]).length;
+      const activityChecked = !!dayEntry.checks.activity;
+      const staticDoneWeekend = WEEKEND_DUAL_ITEMS.filter(i => dayEntry.checks[i.key]).length;
+      const done = staticDoneWeekend + (activityChecked ? 1 : 0);
       document.getElementById("weekendProgressTrack").style.display = skipped ? "none" : "block";
       document.getElementById("weekendProgressSkipText").style.display = skipped ? "block" : "none";
       document.getElementById("weekendProgressSkipText").textContent = "Skipped \u2014 sick / vacation";
-      document.getElementById("weekendProgressFill").style.width = Math.round((done / WEEKEND_DUAL_ITEMS.length) * 100) + "%";
+      document.getElementById("weekendProgressFill").style.width = Math.round((done / (WEEKEND_DUAL_ITEMS.length + 1)) * 100) + "%";
 
       const weekendBoard = document.getElementById("weekendBoard");
       weekendBoard.innerHTML = "";
-      WEEKEND_DUAL_ITEMS.forEach((item, idx) => {
+      // 3 static items, then the activity slot, then the remaining 2 static items --
+      // matches the weekday grid's item/activity arrangement.
+      const weekendGridItems = [
+        ...WEEKEND_DUAL_ITEMS.slice(0, 3).map(item => ({ kind: "static", item })),
+        { kind: "activity" },
+        ...WEEKEND_DUAL_ITEMS.slice(3).map(item => ({ kind: "static", item })),
+      ];
+      weekendGridItems.forEach((cell, idx) => {
         const row = Math.floor(idx / 2), col = idx % 2;
         const dark = (row + col) % 2 === 1;
-        const checked = !!dayEntry.checks[item.key];
-        const streak = item.key === MOBILITY_ITEM.key ? movementStreak(viewDate) : weekendStreak(item.key, viewDate);
         const btn = document.createElement("button");
-        btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
-        btn.disabled = skipped;
-        btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
-          (streak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${streak}</span>` : "");
-        btn.addEventListener("click", () => {
-          dayEntry.checks[item.key] = !dayEntry.checks[item.key];
-          saveJSON(DAY_KEY, dayData);
-          render();
-        });
+
+        if (cell.kind === "activity") {
+          const activityType = ACTIVITY_TYPES.find(a => a.key === dayEntry.checks.activity);
+          const moveStreak = movementStreak(viewDate);
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (activityChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
+          btn.disabled = skipped;
+          const displayEmoji = activityType ? activityType.emoji : "💪";
+          const displayLabel = activityType ? activityType.label : "Activity";
+          btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
+            (moveStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${moveStreak}</span>` : "");
+          btn.addEventListener("click", () => {
+            cycleActivity(dayEntry);
+            saveJSON(DAY_KEY, dayData);
+            render();
+          });
+        } else {
+          const item = cell.item;
+          const checked = !!dayEntry.checks[item.key];
+          const streak = weekendStreak(item.key, viewDate);
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
+          btn.disabled = skipped;
+          btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
+            (streak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${streak}</span>` : "");
+          btn.addEventListener("click", () => {
+            dayEntry.checks[item.key] = !dayEntry.checks[item.key];
+            saveJSON(DAY_KEY, dayData);
+            render();
+          });
+        }
         weekendBoard.appendChild(btn);
       });
 
@@ -716,17 +712,11 @@
           const d = addDays(monday, i);
           const dEntry = dayData[toDateKey(d)];
           if (dEntry && dEntry.skip) { skippedDays++; continue; }
-          if (isWeekendDay(d)) {
-            totalDone += dEntry ? WEEKEND_DUAL_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
-            totalPossible += WEEKEND_DUAL_ITEMS.length;
-          } else {
-            const workoutSlot = getWorkoutSlot(d);
-            const workoutEntry = dayData[workoutSlot.dateKey];
-            const workoutChecked = !!(workoutEntry && workoutEntry.checks[workoutSlot.item.key]);
-            const staticDone = dEntry ? WEEKDAY_ITEMS.filter(it => dEntry.checks[it.key]).length : 0;
-            totalDone += staticDone + (workoutChecked ? 1 : 0);
-            totalPossible += WEEKDAY_ITEMS.length + 1;
-          }
+          const itemList = isWeekendDay(d) ? WEEKEND_DUAL_ITEMS : WEEKDAY_ITEMS;
+          const staticDone = dEntry ? itemList.filter(it => dEntry.checks[it.key]).length : 0;
+          const activityDone = dEntry && dEntry.checks.activity ? 1 : 0;
+          totalDone += staticDone + activityDone;
+          totalPossible += itemList.length + 1;
         }
         const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
         const weekEntry = getWeekEntry(viewWeekKey);
@@ -751,7 +741,7 @@
       const rec = dayData[key];
       const skipped = !!(rec && rec.skip);
       const done = rec ? Object.values(rec.checks || {}).filter(Boolean).length : 0;
-      const ratio = done / (isW ? WEEKEND_DUAL_ITEMS.length : WEEKDAY_ITEMS.length);
+      const ratio = done / ((isW ? WEEKEND_DUAL_ITEMS.length : WEEKDAY_ITEMS.length) + 1);
       const isTodayCol = key === toDateKey(realToday);
       const isViewedCol = sameDate(d, viewDate);
       const col = document.createElement("button");
@@ -773,6 +763,8 @@
     const wk = getWeekEntry(viewWeekKey);
     renderDots("medDots", wk.meditationCount, MEDITATION_TARGET);
     renderDots("cookDots", wk.cookingCount, COOKING_TARGET);
+    renderDots("liftDots", countActivityThisWeek("lifting", viewDate), LIFTING_TARGET);
+    renderDots("cycleDots", countActivityThisWeek("cycling", viewDate), CYCLING_TARGET);
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
@@ -837,16 +829,11 @@
   });
 
   document.getElementById("exportBtn").addEventListener("click", () => {
-    const wdNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
-    const allCols = [
-      ...WEEKDAY_ITEMS.map(i => ({ key: i.key, label: i.label })),
-      ...WORKOUT_ITEMS.map(i => ({ key: i.key, label: `${i.label} (${wdNames[i.weekday]})` })),
-      { key: WORKOUT_TOSSUP.key, label: `${WORKOUT_TOSSUP.label} (Fri)` },
-    ];
-    const rows = [["date", ...allCols.map(i => i.label)]];
+    const allCols = WEEKDAY_ITEMS.map(i => ({ key: i.key, label: i.label }));
+    const rows = [["date", ...allCols.map(i => i.label), "Activity"]];
     Object.keys(dayData).sort().forEach(date => {
       const entry = dayData[date] || { checks: {} };
-      rows.push([date, ...allCols.map(i => entry.checks[i.key] ? "1" : "0")]);
+      rows.push([date, ...allCols.map(i => entry.checks[i.key] ? "1" : "0"), entry.checks.activity || ""]);
     });
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
