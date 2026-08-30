@@ -85,6 +85,9 @@
   .streak-badge {
     position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
     font-size: 11px; line-height: 1; color: var(--gold-bright); font-weight: 700;
+    text-shadow:
+      -1px -1px 0 var(--navy-square), 1px -1px 0 var(--navy-square),
+      -1px 1px 0 var(--navy-square), 1px 1px 0 var(--navy-square);
   }
   .streak-star { font-size: 1.3em; vertical-align: -1px; }
   .streak-mini { font-size: 10px; opacity: .9; margin-left: 5px; color: var(--gold-bright); font-weight: 600; }
@@ -277,8 +280,6 @@
   // scheduled day passes unchecked, a single "Makeup" square appears the
   // following day only — checking it writes back to the ORIGINAL day's entry
   // (not today's), so streak/history stay accurate to when it was scheduled.
-  // No streak badge on these on purpose — kept low-pressure given competing
-  // priorities with CSET study and past burnout.
   const WORKOUT_ITEMS = [
     { weekday: 1, key: "gym1", label: "Gym (bouldering + lifting)", emoji: "🧗" }, // Monday
     { weekday: 3, key: "cycle", label: "Cycling", emoji: "🚴" },                    // Wednesday
@@ -493,6 +494,40 @@
   function weekdayStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, d => !isWeekendDay(d)); }
   function weekendStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, isWeekendDay); }
 
+  // Consecutive weekdays with that day's own workout-slot item checked, regardless
+  // of which specific item satisfied it (a scheduled gym/cycle day, the Friday
+  // toss-up, or the Mobility fallback) — one combined "movement" streak, since
+  // most of those keys only occur once a week and could never build a streak on
+  // their own. A Friday showing a single-day makeup for a missed Wed/Thu is
+  // skipped rather than scored here, since that square's record actually belongs
+  // to the earlier day (and gets scored there) — otherwise one completed workout
+  // would count twice. Weekends are intentionally a separate streak (see
+  // weekendStreak on the "mobility" key) rather than folded into this one.
+  function movementStreak(uptoDate) {
+    let streak = 0;
+    let d = new Date(uptoDate);
+    d.setHours(0, 0, 0, 0);
+    for (let guard = 0; guard < 500; guard++) {
+      if (isWeekendDay(d)) { d = addDays(d, -1); continue; }
+      const key = toDateKey(d);
+      const entry = dayData[key];
+      if (entry && entry.skip) { d = addDays(d, -1); continue; }
+      const slot = getWorkoutSlot(d);
+      if (slot.dateKey !== key) { d = addDays(d, -1); continue; }
+      const checked = !!(entry && entry.checks[slot.item.key]);
+      const isRealToday = sameDate(d, realToday);
+      if (checked) {
+        streak++;
+      } else if (isRealToday) {
+        // in-progress day, no verdict yet
+      } else {
+        break;
+      }
+      d = addDays(d, -1);
+    }
+    return streak;
+  }
+
   // Consecutive weeks meeting a weekly counter's target, walking backward from the week containing uptoDate.
   // The current in-progress week doesn't break the streak if it hasn't hit target yet.
   function weeklyCounterStreak(counterKey, target, uptoDate) {
@@ -579,10 +614,12 @@
         const btn = document.createElement("button");
 
         if (cell.kind === "workout") {
-          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (workoutChecked ? " sq-checked" : "");
+          const moveStreak = movementStreak(viewDate);
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (workoutChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           const prefix = workoutSlot.isMakeup ? "Makeup: " : "";
-          btn.innerHTML = `<span class="emoji">${workoutSlot.item.emoji}</span><span class="label">${escapeHTML(prefix + workoutSlot.item.label)}</span>`;
+          btn.innerHTML = `<span class="emoji">${workoutSlot.item.emoji}</span><span class="label">${escapeHTML(prefix + workoutSlot.item.label)}</span>` +
+            (moveStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${moveStreak}</span>` : "");
           btn.addEventListener("click", () => {
             workoutEntry.checks[workoutSlot.item.key] = !workoutEntry.checks[workoutSlot.item.key];
             saveJSON(DAY_KEY, dayData);
