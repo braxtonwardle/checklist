@@ -200,7 +200,7 @@
   <div class="weekly">
     <div class="weekly-header">This week</div>
     <div class="weekly-row">
-      <span class="weekly-label">🧘 Meditation</span>
+      <span class="weekly-label" id="medLabel">🧘 Meditation</span>
       <div class="dots" id="medDots"></div>
       <div class="weekly-btns">
         <button class="small-btn" id="medPlus">+1</button>
@@ -208,7 +208,7 @@
       </div>
     </div>
     <div class="weekly-row">
-      <span class="weekly-label">🍳 Cooked at home</span>
+      <span class="weekly-label" id="cookLabel">🍳 Cooked at home</span>
       <div class="dots" id="cookDots"></div>
       <div class="weekly-btns">
         <button class="small-btn" id="cookPlus">+1</button>
@@ -248,7 +248,7 @@
 
   let dayData = loadJSON(DAY_KEY, {});       // { "YYYY-MM-DD": { checks: {} } } — every day, weekday or weekend
   let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, extra, reset } } — shared across Sat+Sun
-  let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, workoutCount } }
+  let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, cookingCount } }
   const LAST_BACKUP_KEY = "wb_lastBackupAt";
 
   // ---------- date helpers ----------
@@ -308,9 +308,6 @@
     }
     return count;
   }
-  const LIFTING_TARGET = 2;
-  const CYCLING_TARGET = 1;
-
   // ---------- rotating chore pool ----------
   // All 5 chores share one queue in a fixed order. Each weekday, the first
   // ELIGIBLE item in the queue is shown — trash is only eligible Thu/Fri
@@ -371,6 +368,8 @@
   ];
   const MEDITATION_TARGET = 3;
   const COOKING_TARGET = 3;
+  const LIFTING_TARGET = 2;
+  const CYCLING_TARGET = 1;
 
   // ---------- quotes ----------
   const QUOTES = [
@@ -544,6 +543,7 @@
   function render() {
     const viewDateKey = toDateKey(viewDate);
     const viewWeekKey = weekKeyOf(viewDate);
+    const weekEntry = getWeekEntry(viewWeekKey);
     const viewWeekend = isWeekendDay(viewDate);
     const isToday = sameDate(viewDate, realToday);
 
@@ -725,7 +725,6 @@
           totalPossible += itemList.length + 1;
         }
         const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
-        const weekEntry = getWeekEntry(viewWeekKey);
         document.getElementById("recapFill").style.width = pct + "%";
         document.getElementById("recapPct").textContent = pct + "%";
         const extraParts = [`${totalDone}/${totalPossible} items`];
@@ -766,16 +765,15 @@
     });
 
     // weekly counters
-    const wk = getWeekEntry(viewWeekKey);
-    renderDots("medDots", wk.meditationCount, MEDITATION_TARGET);
-    renderDots("cookDots", wk.cookingCount, COOKING_TARGET);
+    renderDots("medDots", weekEntry.meditationCount, MEDITATION_TARGET);
+    renderDots("cookDots", weekEntry.cookingCount, COOKING_TARGET);
     renderDots("liftDots", countActivityThisWeek("lifting", viewDate), LIFTING_TARGET);
     renderDots("cycleDots", countActivityThisWeek("cycling", viewDate), CYCLING_TARGET);
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
-    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
+    document.getElementById("medLabel").innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
+    document.getElementById("cookLabel").innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
   }
 
   function renderDots(id, count, target) {
