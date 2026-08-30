@@ -23,6 +23,10 @@
     --ivory-square: #EDE8DD;
     --teal: #4C6A73;
     --olive: #7A8C4C;
+    --quote-ink: #C7D0E8;
+    --skip-active-bg: #2A2038;
+    --mode-active-bg: #182A4A;
+    --history-empty: #33465F;
     font-family: 'Georgia', 'Iowan Old Style', ui-serif, serif;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -37,7 +41,7 @@
   .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
   .quote-block { margin-bottom: 16px; }
-  .quote-text { color: #C7D0E8; font-size: 12.5px; line-height: 1.4; font-style: italic; }
+  .quote-text { color: var(--quote-ink); font-size: 12.5px; line-height: 1.4; font-style: italic; }
   .quote-author { color: var(--muted2); font-size: 11px; margin-top: 4px; }
 
   .nav-row {
@@ -73,8 +77,8 @@
   .square .emoji { font-size: 17px; line-height: 1; }
   .square .label { font-size: 12px; line-height: 1.25; }
   .sq-dark { background: var(--navy-square); color: var(--ink); }
-  .sq-light { background: var(--ivory-square); color: #16213E; }
-  .sq-checked { background: var(--gold); color: #16213E; }
+  .sq-light { background: var(--ivory-square); color: var(--navy-square); }
+  .sq-checked { background: var(--gold); color: var(--navy-square); }
   .streak-badge {
     position: absolute; top: 5px; right: 6px; font-size: 10px;
     line-height: 1; opacity: .85;
@@ -88,14 +92,14 @@
     border: 1px solid var(--line2); background: transparent; color: var(--muted2);
     font-size: 12.5px; cursor: pointer; font-family: inherit;
   }
-  .skip-btn.active { background: #2A2038; color: var(--gold); border-color: var(--gold); }
+  .skip-btn.active { background: var(--skip-active-bg); color: var(--gold); border-color: var(--gold); }
 
   .mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
   .mode-btn {
     flex: 1; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line2);
     background: transparent; color: var(--muted); font-size: 13px; cursor: pointer;
   }
-  .mode-btn.active { background: #182A4A; color: var(--ink); border-color: var(--gold); }
+  .mode-btn.active { background: var(--mode-active-bg); color: var(--ink); border-color: var(--gold); }
 
   .cluster-label {
     color: var(--muted2); font-size: 11px; letter-spacing: .12em; font-weight: 600;
@@ -124,7 +128,7 @@
   .small-btn, .small-btn-ghost {
     border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; font-family: inherit;
   }
-  .small-btn { background: var(--gold); color: #16213E; border: none; }
+  .small-btn { background: var(--gold); color: var(--navy-square); border: none; }
   .small-btn-ghost { background: transparent; color: var(--muted2); border: 1px solid var(--line2); }
 
   .footer-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
@@ -693,7 +697,7 @@
       const bar = document.createElement("div");
       bar.className = "history-bar";
       bar.style.height = (skipped ? 20 : Math.max(6, ratio * 32)) + "px";
-      bar.style.background = skipped ? "var(--muted2)" : (isW ? "var(--teal)" : (ratio >= 1 ? "var(--gold)" : ratio > 0 ? "var(--olive)" : "#33465F"));
+      bar.style.background = skipped ? "var(--muted2)" : (isW ? "var(--teal)" : (ratio >= 1 ? "var(--gold)" : ratio > 0 ? "var(--olive)" : "var(--history-empty)"));
       bar.style.outline = isTodayCol ? "1px solid var(--ink)" : (isViewedCol ? "1px solid var(--gold)" : "none");
       const lbl = document.createElement("div");
       lbl.className = "history-label";
