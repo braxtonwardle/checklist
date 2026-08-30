@@ -13,7 +13,7 @@ Live at: `https://<your-username>.github.io/<repo-name>/`
 - **Weekend mode** — Saturday and Sunday each render as their own day, with their own progress count and sick/vacation skip, while a set of extra items (physical activity, weekly clean, chess study, reading) stays shared across the whole weekend. A "Sophie weekend" mode hides the extra items entirely for a lighter weekend.
 - **Weekly counters** — meditation and home-cooked-meals targets (×3/week), tracked as dot progress rather than daily checkboxes.
 - **Streaks** — shown per daily item (weekday and weekend alike) and per weekly counter. A day marked "sick / traveling" pauses a streak instead of breaking it; an in-progress day/week is never treated as a miss before it's actually over.
-- **Sunday recap** — a summary panel that appears only when viewing Sunday: how many weekdays that week were fully checked off vs. partial vs. skipped, plus the week's meditation and cooking counts.
+- **Sunday recap** — a summary panel that appears only when viewing Sunday: one completion percentage across the whole week (all 7 days, skipped days excluded), plus the week's meditation and cooking counts.
 - **Daily quote** — rotates by calendar date from a fixed bank of real, attributed quotes (no AI-generated or "in the style of" content — every attributed line is genuine).
 - **7-day history strip** — at-a-glance view of recent completion, with distinct styling for skipped/sick days.
 - **CSV export** — pulls the weekday checklist history out of `localStorage` for review elsewhere.
