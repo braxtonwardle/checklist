@@ -102,10 +102,6 @@
     margin-bottom: 6px; margin-top: 14px;
   }
 
-  .reset-list { background: var(--panel); border-radius: 10px; padding: 10px 14px; margin-bottom: 6px; }
-  .reset-row { display: flex; align-items: center; color: var(--ink); font-size: 13.5px; padding: 5px 0; cursor: pointer; }
-  .reset-row input { width: 15px; height: 15px; margin-right: 8px; accent-color: var(--gold); }
-
   .history-strip {
     display: flex; justify-content: space-between; align-items: flex-end;
     height: 48px; margin: 18px 4px 18px;
@@ -172,8 +168,6 @@
       <button class="mode-btn" id="sophieBtn">Sophie weekend</button>
     </div>
     <div class="board" id="extraBoard"></div>
-    <div class="cluster-label" id="resetLabel"></div>
-    <div class="reset-list" id="resetList"></div>
 
     <div class="weekly" id="recapPanel" style="display:none; margin-top:14px;">
       <div class="weekly-header">Week recap</div>
@@ -374,19 +368,9 @@
   ];
   const WEEKEND_EXTRA_ITEMS = [
     { key: "physicalActivity", label: "Physical activity", emoji: "💪" },
-    { key: "meditationSession", label: "Meditation session", emoji: "🧘" },
+    { key: "clean", label: "Weekly clean", emoji: "🧹" },
     { key: "chessStudy", label: "Dedicated chess study", emoji: "♞" },
     { key: "readingSession", label: "Reading session", emoji: "📖" },
-  ];
-  const REGULAR_RESET_ITEMS = [
-    { key: "clean", label: "Weekly clean", emoji: "🧹" },
-    { key: "calendar", label: "Calendar glanced at", emoji: "📅" },
-    { key: "groceries", label: "Groceries", emoji: "🛒" },
-    { key: "slots", label: "Choose week's slots", emoji: "♟️" },
-  ];
-  const SOPHIE_RESET_ITEMS = [
-    { key: "calendar", label: "Calendar glanced at", emoji: "📅" },
-    { key: "laundry", label: "Laundry", emoji: "🧺" },
   ];
   const MEDITATION_TARGET = 3;
   const COOKING_TARGET = 3;
@@ -454,7 +438,7 @@
     return dayData[key];
   }
   function getWeekendEntry(key) {
-    if (!weekendData[key]) weekendData[key] = { mode: "regular", extra: {}, reset: {} };
+    if (!weekendData[key]) weekendData[key] = { mode: "regular", extra: {} };
     return weekendData[key];
   }
   function getWeekEntry(key) {
@@ -727,36 +711,13 @@
           btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
           btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>`;
           btn.addEventListener("click", () => {
-            const wasChecked = !!wEntry.extra[item.key];
-            wEntry.extra[item.key] = !wasChecked;
+            wEntry.extra[item.key] = !wEntry.extra[item.key];
             saveJSON(WEEKEND_KEY, weekendData);
-            if (!wasChecked) {
-              const wkEntry = getWeekEntry(viewWeekKey);
-              if (item.key === "meditationSession") wkEntry.meditationCount = Math.min(MEDITATION_TARGET, wkEntry.meditationCount + 1);
-              saveJSON(WEEK_KEY, weekData);
-            }
             render();
           });
           extraBoard.appendChild(btn);
         });
       }
-
-      document.getElementById("resetLabel").textContent = wEntry.mode === "sophie" ? "Reset (pared down)" : "Weekly reset";
-      const resetItems = wEntry.mode === "sophie" ? SOPHIE_RESET_ITEMS : REGULAR_RESET_ITEMS;
-      const resetList = document.getElementById("resetList");
-      resetList.innerHTML = "";
-      resetItems.forEach(item => {
-        const checked = !!wEntry.reset[item.key];
-        const label = document.createElement("label");
-        label.className = "reset-row";
-        label.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""}><span style="margin-right:6px;">${item.emoji}</span>${escapeHTML(item.label)}`;
-        label.querySelector("input").addEventListener("change", () => {
-          wEntry.reset[item.key] = !wEntry.reset[item.key];
-          saveJSON(WEEKEND_KEY, weekendData);
-          render();
-        });
-        resetList.appendChild(label);
-      });
 
       const recapPanel = document.getElementById("recapPanel");
       if (viewDate.getDay() === 0) {
