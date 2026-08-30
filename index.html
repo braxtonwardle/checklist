@@ -500,15 +500,17 @@
   migrateLucyKeys();
 
   // ---------- streaks ----------
-  // Consecutive weekdays (Mon-Fri only) with itemKey checked, walking backward from uptoDate.
-  // If uptoDate is genuinely today and still unchecked, that day is treated as "pending" (skipped,
-  // not counted, doesn't break the streak) rather than a miss.
-  function weekdayStreak(itemKey, uptoDate) {
+  // Consecutive days matching includeDay (Mon-Fri for weekdayStreak, Sat/Sun for
+  // weekendStreak) with itemKey checked, walking backward from uptoDate. A skipped
+  // day is excused rather than counted as a miss. If uptoDate is genuinely today
+  // and still unchecked, that day is treated as "pending" (doesn't break the
+  // streak) rather than a miss.
+  function dayTypeStreak(itemKey, uptoDate, includeDay) {
     let streak = 0;
     let d = new Date(uptoDate);
     d.setHours(0, 0, 0, 0);
     for (let guard = 0; guard < 500; guard++) {
-      if (isWeekendDay(d)) { d = addDays(d, -1); continue; }
+      if (!includeDay(d)) { d = addDays(d, -1); continue; }
       const key = toDateKey(d);
       const entry = dayData[key];
       if (entry && entry.skip) { d = addDays(d, -1); continue; }
@@ -525,31 +527,8 @@
     }
     return streak;
   }
-
-  // Consecutive weekend days (Sat/Sun only) with itemKey checked, walking backward from uptoDate.
-  // Mirrors weekdayStreak but walks Sat/Sun instead of Mon-Fri.
-  function weekendStreak(itemKey, uptoDate) {
-    let streak = 0;
-    let d = new Date(uptoDate);
-    d.setHours(0, 0, 0, 0);
-    for (let guard = 0; guard < 500; guard++) {
-      if (!isWeekendDay(d)) { d = addDays(d, -1); continue; }
-      const key = toDateKey(d);
-      const entry = dayData[key];
-      if (entry && entry.skip) { d = addDays(d, -1); continue; }
-      const checked = !!(entry && entry.checks[itemKey]);
-      const isRealToday = sameDate(d, realToday);
-      if (checked) {
-        streak++;
-      } else if (isRealToday) {
-        // in-progress day, no verdict yet
-      } else {
-        break;
-      }
-      d = addDays(d, -1);
-    }
-    return streak;
-  }
+  function weekdayStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, d => !isWeekendDay(d)); }
+  function weekendStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, isWeekendDay); }
 
   // Consecutive weeks meeting a weekly counter's target, walking backward from the week containing uptoDate.
   // The current in-progress week doesn't break the streak if it hasn't hit target yet.
