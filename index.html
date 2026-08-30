@@ -20,7 +20,7 @@
     --muted2: #6E80A8;
     --gold: #D4A24C;
     --navy-square: #16213E;
-    --ivory-square: #EDE8DD;
+    --ivory-square: #DED6C4;
     --teal: #4C6A73;
     --olive: #7A8C4C;
     --quote-ink: #C7D0E8;
@@ -71,7 +71,7 @@
   }
   .square {
     position: relative;
-    min-height: 74px; display: flex; flex-direction: column; align-items: center;
+    min-height: 60px; display: flex; flex-direction: column; align-items: center;
     justify-content: center; gap: 5px; border: none; cursor: pointer;
     padding: 10px 8px; text-align: center; font-family: inherit;
   }
@@ -80,31 +80,22 @@
   .sq-dark { background: var(--navy-square); color: var(--ink); }
   .sq-light { background: var(--ivory-square); color: var(--navy-square); }
   .sq-checked { box-shadow: inset 0 0 0 3px var(--gold); }
-  .sq-checked::after {
-    content: "\2713";
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 32px;
-    line-height: 1;
-    color: var(--gold);
-    opacity: .3;
-    pointer-events: none;
-  }
   .streak-badge {
-    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
-    font-size: 10px; line-height: 1; opacity: .9; color: var(--gold); font-weight: 600;
+    position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
+    font-size: 11px; line-height: 1; color: var(--gold); font-weight: 700;
+    background: rgba(0, 0, 0, .35); border-radius: 8px; padding: 2px 6px;
   }
   .streak-mini { font-size: 10px; opacity: .9; margin-left: 5px; color: var(--gold); font-weight: 600; }
 
   .square:disabled { opacity: .35; cursor: default; }
 
   .skip-btn {
-    width: 100%; margin-top: 10px; padding: 9px 10px; border-radius: 8px;
-    border: 1px solid var(--line2); background: transparent; color: var(--muted2);
-    font-size: 12.5px; cursor: pointer; font-family: inherit;
+    display: block; margin: 8px auto 0; padding: 3px 6px; border-radius: 6px;
+    border: none; background: transparent; color: var(--muted2);
+    font-size: 10.5px; cursor: pointer; font-family: inherit; text-decoration: underline;
+    opacity: .7;
   }
-  .skip-btn.active { background: var(--skip-active-bg); color: var(--gold); border-color: var(--gold); }
+  .skip-btn.active { color: var(--gold); opacity: 1; text-decoration: none; background: var(--skip-active-bg); padding: 3px 8px; }
 
   .mode-row { display: flex; gap: 8px; margin-bottom: 14px; }
   .mode-btn {
