@@ -475,6 +475,11 @@
   }
   function weekdayStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, d => !isWeekendDay(d)); }
   function weekendStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, isWeekendDay); }
+  // Some keys mean the same thing on weekdays and weekends (water/lucy/sleep
+  // appear in both item lists) — for those, the streak should run across every
+  // day of the week instead of resetting at the weekday/weekend boundary.
+  const CROSS_DAY_STREAK_KEYS = ["water", "lucy", "sleep"];
+  function unifiedStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, () => true); }
 
   // Consecutive days (every day of the week) with any activity type logged —
   // one combined streak regardless of which of the three types it was.
@@ -600,7 +605,7 @@
         } else {
           const item = cell.item;
           const checked = !!entry.checks[item.key];
-          const streak = weekdayStreak(item.key, viewDate);
+          const streak = CROSS_DAY_STREAK_KEYS.includes(item.key) ? unifiedStreak(item.key, viewDate) : weekdayStreak(item.key, viewDate);
           const todaysChore = item.key === "clean" ? getChoreForDate(viewDate) : null;
           const displayLabel = todaysChore ? todaysChore.label : item.label;
           const displayEmoji = todaysChore ? todaysChore.emoji : item.emoji;
@@ -664,7 +669,7 @@
         } else {
           const item = cell.item;
           const checked = !!dayEntry.checks[item.key];
-          const streak = weekendStreak(item.key, viewDate);
+          const streak = CROSS_DAY_STREAK_KEYS.includes(item.key) ? unifiedStreak(item.key, viewDate) : weekendStreak(item.key, viewDate);
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
