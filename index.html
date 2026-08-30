@@ -40,7 +40,17 @@
   .wrap { width: 100%; max-width: 420px; margin: 0 auto; padding-top: 12px; }
   .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-  .quote-block { margin-bottom: 16px; }
+  .quote-block { margin-bottom: 16px; text-align: center; }
+  .quote-block::before {
+    content: "\201C";
+    display: block;
+    text-align: center;
+    font-size: 40px;
+    color: var(--gold);
+    opacity: .3;
+    line-height: .6;
+    margin-bottom: -6px;
+  }
   .quote-text { color: var(--quote-ink); font-size: 12.5px; line-height: 1.4; font-style: italic; }
   .quote-author { color: var(--muted2); font-size: 11px; margin-top: 4px; }
 
@@ -61,8 +71,9 @@
     font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0;
   }
 
-  .progress-row { display: flex; justify-content: flex-end; margin-bottom: 8px; }
-  .progress { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 14px; }
+  .completion-bar-track { width: 100%; height: 8px; background: var(--line2); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .completion-bar-fill { height: 100%; width: 0%; background: var(--gold); border-radius: 4px; transition: width .3s ease; }
+  .progress-skip-text { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 14px; text-align: right; margin-bottom: 8px; }
 
   .board {
     display: grid; grid-template-columns: 1fr 1fr; gap: 2px;
@@ -78,12 +89,23 @@
   .square .label { font-size: 12px; line-height: 1.25; }
   .sq-dark { background: var(--navy-square); color: var(--ink); }
   .sq-light { background: var(--ivory-square); color: var(--navy-square); }
-  .sq-checked { background: var(--gold); color: var(--navy-square); }
-  .streak-badge {
-    position: absolute; top: 5px; right: 6px; font-size: 10px;
-    line-height: 1; opacity: .85;
+  .sq-checked { box-shadow: inset 0 0 0 2px var(--gold); }
+  .sq-checked::after {
+    content: "\2713";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 32px;
+    line-height: 1;
+    color: var(--gold);
+    opacity: .3;
+    pointer-events: none;
   }
-  .streak-mini { font-size: 10px; opacity: .75; margin-left: 5px; }
+  .streak-badge {
+    position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; line-height: 1; opacity: .9; color: var(--gold); font-weight: 600;
+  }
+  .streak-mini { font-size: 10px; opacity: .9; margin-left: 5px; color: var(--gold); font-weight: 600; }
 
   .square:disabled { opacity: .35; cursor: default; }
 
@@ -119,6 +141,9 @@
 
   .weekly { background: var(--panel); border-radius: 10px; padding: 14px 16px; }
   .weekly-header { color: var(--gold); font-size: 11px; letter-spacing: .15em; font-weight: 600; margin-bottom: 10px; }
+  .recap-bar-row { display: flex; align-items: center; gap: 8px; }
+  .recap-bar-row .completion-bar-track { margin-bottom: 0; }
+  .recap-pct { color: var(--gold); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; white-space: nowrap; }
   .weekly-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
   .weekly-label { color: var(--ink); font-size: 13.5px; flex: 1; }
   .dots { display: flex; gap: 5px; }
@@ -156,13 +181,15 @@
   </div>
 
   <div id="weekdayView">
-    <div class="progress-row"><span class="progress" id="progress"></span></div>
+    <div class="completion-bar-track" id="progressTrack"><div class="completion-bar-fill" id="progressFill"></div></div>
+    <div class="progress-skip-text" id="progressSkipText" style="display:none;"></div>
     <div class="board" id="weekdayBoard"></div>
     <button class="skip-btn" id="skipDayBtn">🤒 Sick / vacation — skip today</button>
   </div>
 
   <div id="weekendView" style="display:none;">
-    <div class="progress-row"><span class="progress" id="weekendProgress"></span></div>
+    <div class="completion-bar-track" id="weekendProgressTrack"><div class="completion-bar-fill" id="weekendProgressFill"></div></div>
+    <div class="progress-skip-text" id="weekendProgressSkipText" style="display:none;"></div>
     <div class="board" id="weekendBoard"></div>
     <button class="skip-btn" id="skipWeekendBtn">🤒 Sick / vacation — skip today</button>
 
@@ -175,7 +202,11 @@
 
     <div class="weekly" id="recapPanel" style="display:none; margin-top:14px;">
       <div class="weekly-header">Week recap</div>
-      <div class="tiny" id="recapText" style="margin-top:0;"></div>
+      <div class="recap-bar-row">
+        <div class="completion-bar-track" style="flex:1;"><div class="completion-bar-fill" id="recapFill"></div></div>
+        <span class="recap-pct" id="recapPct"></span>
+      </div>
+      <div class="tiny" id="recapExtra" style="margin-top:6px;"></div>
     </div>
   </div>
 
@@ -544,7 +575,11 @@
       const workoutChecked = !!workoutEntry.checks[workoutSlot.item.key];
       const staticDone = WEEKDAY_ITEMS.filter(i => entry.checks[i.key]).length;
       const done = staticDone + (workoutChecked ? 1 : 0);
-      document.getElementById("progress").textContent = skipped ? "Skipped — sick / vacation" : (done + "/" + (WEEKDAY_ITEMS.length + 1));
+      const dayTotal = WEEKDAY_ITEMS.length + 1;
+      document.getElementById("progressTrack").style.display = skipped ? "none" : "block";
+      document.getElementById("progressSkipText").style.display = skipped ? "block" : "none";
+      document.getElementById("progressSkipText").textContent = "Skipped — sick / vacation";
+      document.getElementById("progressFill").style.width = Math.round((done / dayTotal) * 100) + "%";
 
       const board = document.getElementById("weekdayBoard");
       board.innerHTML = "";
@@ -561,7 +596,7 @@
         const btn = document.createElement("button");
 
         if (cell.kind === "workout") {
-          btn.className = "square " + (workoutChecked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (workoutChecked ? " sq-checked" : "");
           btn.disabled = skipped;
           const prefix = workoutSlot.isMakeup ? "Makeup: " : "";
           btn.innerHTML = `<span class="emoji">${workoutSlot.item.emoji}</span><span class="label">${escapeHTML(prefix + workoutSlot.item.label)}</span>`;
@@ -577,10 +612,10 @@
           const todaysChore = item.key === "clean" ? getChoreForDate(viewDate) : null;
           const displayLabel = todaysChore ? todaysChore.label : item.label;
           const displayEmoji = todaysChore ? todaysChore.emoji : item.emoji;
-          btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
           btn.disabled = skipped;
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
-            (streak > 0 ? `<span class="streak-badge">🔥${streak}</span>` : "");
+            (streak > 0 ? `<span class="streak-badge">${streak}</span>` : "");
           btn.addEventListener("click", () => {
             entry.checks[item.key] = !entry.checks[item.key];
             saveJSON(DAY_KEY, dayData);
@@ -599,7 +634,10 @@
       const skipped = !!dayEntry.skip;
 
       const done = WEEKEND_DUAL_ITEMS.filter(i => dayEntry.checks[i.key]).length;
-      document.getElementById("weekendProgress").textContent = skipped ? "Skipped \u2014 sick / vacation" : (done + "/" + WEEKEND_DUAL_ITEMS.length);
+      document.getElementById("weekendProgressTrack").style.display = skipped ? "none" : "block";
+      document.getElementById("weekendProgressSkipText").style.display = skipped ? "block" : "none";
+      document.getElementById("weekendProgressSkipText").textContent = "Skipped \u2014 sick / vacation";
+      document.getElementById("weekendProgressFill").style.width = Math.round((done / WEEKEND_DUAL_ITEMS.length) * 100) + "%";
 
       const weekendBoard = document.getElementById("weekendBoard");
       weekendBoard.innerHTML = "";
@@ -609,10 +647,10 @@
         const checked = !!dayEntry.checks[item.key];
         const streak = weekendStreak(item.key, viewDate);
         const btn = document.createElement("button");
-        btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+        btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
         btn.disabled = skipped;
         btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>` +
-          (streak > 0 ? `<span class="streak-badge">\ud83d\udd25${streak}</span>` : "");
+          (streak > 0 ? `<span class="streak-badge">${streak}</span>` : "");
         btn.addEventListener("click", () => {
           dayEntry.checks[item.key] = !dayEntry.checks[item.key];
           saveJSON(DAY_KEY, dayData);
@@ -636,7 +674,7 @@
           const dark = (row + col) % 2 === 1;
           const checked = !!wEntry.extra[item.key];
           const btn = document.createElement("button");
-          btn.className = "square " + (checked ? "sq-checked" : (dark ? "sq-dark" : "sq-light"));
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "");
           btn.innerHTML = `<span class="emoji">${item.emoji}</span><span class="label">${escapeHTML(item.label)}</span>`;
           btn.addEventListener("click", () => {
             wEntry.extra[item.key] = !wEntry.extra[item.key];
@@ -670,11 +708,13 @@
         }
         const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
         const weekEntry = getWeekEntry(viewWeekKey);
-        const parts = [`${pct}% this week (${totalDone}/${totalPossible})`];
-        if (skippedDays) parts.push(`${skippedDays} skipped`);
-        parts.push(`🧘 ${weekEntry.meditationCount}/${MEDITATION_TARGET}`);
-        parts.push(`🍳 ${weekEntry.cookingCount}/${COOKING_TARGET}`);
-        document.getElementById("recapText").textContent = parts.join(" · ");
+        document.getElementById("recapFill").style.width = pct + "%";
+        document.getElementById("recapPct").textContent = pct + "%";
+        const extraParts = [`${totalDone}/${totalPossible} items`];
+        if (skippedDays) extraParts.push(`${skippedDays} skipped`);
+        extraParts.push(`🧘 ${weekEntry.meditationCount}/${MEDITATION_TARGET}`);
+        extraParts.push(`🍳 ${weekEntry.cookingCount}/${COOKING_TARGET}`);
+        document.getElementById("recapExtra").textContent = extraParts.join(" · ");
       } else {
         recapPanel.style.display = "none";
       }
@@ -714,8 +754,8 @@
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">🔥${medStreak}wk</span>` : "");
-    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">🔥${cookStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[0].innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini">${medStreak}wk</span>` : "");
+    document.querySelectorAll(".weekly-label")[1].innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini">${cookStreak}wk</span>` : "");
   }
 
   function renderDots(id, count, target) {
