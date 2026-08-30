@@ -366,8 +366,9 @@
   }
   const WEEKEND_DUAL_ITEMS = [
     { key: "water", label: "Water first", emoji: "💧" },
-    { key: "lucyAM", label: "Lucy walk (AM)", emoji: "🐾" },
-    { key: "lucyPM", label: "Lucy walk (PM)", emoji: "🐾" },
+    { key: "phoneMorning", label: "No phone first hour", emoji: "🔕" },
+    { key: "lucy", label: "Lucy walked", emoji: "🐾" },
+    { key: "mobility", label: "Stretched / mobility work", emoji: "🤸" },
     { key: "phone", label: "Phone outside room", emoji: "📵" },
     { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
   ];
@@ -375,6 +376,7 @@
     { key: "physicalActivity", label: "Physical activity", emoji: "💪" },
     { key: "meditationSession", label: "Meditation session", emoji: "🧘" },
     { key: "chessStudy", label: "Dedicated chess study", emoji: "♞" },
+    { key: "readingSession", label: "Reading session", emoji: "📖" },
   ];
   const REGULAR_RESET_ITEMS = [
     { key: "clean", label: "Weekly clean", emoji: "🧹" },
@@ -492,6 +494,26 @@
     }
   }
   migrateWeekendData();
+
+  // ---------- one-time migration: collapsed Lucy AM/PM into one item ----------
+  // The weekend board used to track the dog walk as two separate squares
+  // (lucyAM/lucyPM); it's now a single "Lucy walked" square like every other
+  // item, keyed the same as the weekday version. Existing checks fold in as
+  // "walked at least once that day" rather than being silently discarded.
+  function migrateLucyKeys() {
+    let changed = false;
+    Object.keys(dayData).forEach(dateKey => {
+      const checks = dayData[dateKey].checks;
+      if (checks && (checks.lucyAM !== undefined || checks.lucyPM !== undefined)) {
+        checks.lucy = !!(checks.lucyAM || checks.lucyPM);
+        delete checks.lucyAM;
+        delete checks.lucyPM;
+        changed = true;
+      }
+    });
+    if (changed) saveJSON(DAY_KEY, dayData);
+  }
+  migrateLucyKeys();
 
   // ---------- streaks ----------
   // Consecutive weekdays (Mon-Fri only) with itemKey checked, walking backward from uptoDate.
@@ -911,6 +933,7 @@
       weekendData = backup.weekend;
       weekData = backup.week;
       migrateWeekendData();
+      migrateLucyKeys();
       saveJSON(DAY_KEY, dayData);
       saveJSON(WEEKEND_KEY, weekendData);
       saveJSON(WEEK_KEY, weekData);
