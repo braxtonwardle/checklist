@@ -9,14 +9,14 @@ Live at: `https://<your-username>.github.io/<repo-name>/`
 
 - **Weekday checklist** — a fixed set of daily items (wake time, water, dog walk, sleep, chess study, a rotating chore, phone/bedtime), plus an Activity slot
 - **Activity square** — one square, every day (weekday and weekend alike), that cycles through Mobility / Climbing-Lifting / Cycling on repeated taps. Nothing is pinned to a specific day, so what actually happened that day is what gets logged. A "This week" panel tracks Climbing/Lifting (target 2) and Cycling (target 1) against a weekly goal, computed directly from that week's squares.
-- **Rotating chore pool** — cycles through a small set of chores rather than one static "clean" item; a trash-specific chore is restricted to its actual pickup window so it never shows up on a day it can't be done.
+- **Chore square** — suggests a chore each weekday from a rotating pool of 4 (bathroom/vacuum/kitchen/organize), but taps cycle through the other options if a different one is actually needed that day; whichever one you land on is what gets recorded, and the one you skipped stays in the pool for next time. Trash is separate from the pool and always lands on Thursday (pickup window), with Friday as a one-day catch-up if Thursday's was missed.
 - **Weekend mode** — Saturday and Sunday each render as their own day, with their own progress count and sick/vacation skip, while a set of extra items (household project, weekly clean, chess study, reading) stays shared across the whole weekend. A "Sophie weekend" mode hides the extra items entirely for a lighter weekend.
 - **Weekly counters** — meditation and home-cooked-meals targets (×3/week), tracked as dot progress rather than daily checkboxes.
 - **Streaks** — shown per daily item (weekday and weekend alike) and per weekly counter. A day marked "sick / traveling" pauses a streak instead of breaking it; an in-progress day/week is never treated as a miss before it's actually over.
 - **Sunday recap** — a summary panel that appears only when viewing Sunday: one completion percentage across the whole week (all 7 days, skipped days excluded), plus the week's meditation and cooking counts.
 - **Daily quote** — rotates by calendar date from a fixed bank of real, attributed quotes (no AI-generated or "in the style of" content — every attributed line is genuine).
 - **7-day history strip** — at-a-glance view of recent completion, with distinct styling for skipped/sick days.
-- **CSV export** — pulls the weekday checklist history (plus the logged Activity type per day) out of `localStorage` for review elsewhere.
+- **CSV export** — pulls the weekday checklist history (plus the logged Activity and Chore per day) out of `localStorage` for review elsewhere.
 - **JSON backup/restore** — downloads the complete app state as one file and can reload it back in, so a cleared browser or a new device doesn't lose history. A status line next to the button shows how long it's been since the last backup.
 
 ## Tech
