@@ -278,7 +278,6 @@
     { key: "lucy", label: "Lucy walked", emoji: "🐾" },
     { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
     { key: "chess", label: "Chess study", emoji: "♞" },
-    { key: "clean", label: "Daily reset (10 min)", emoji: "🧹" },
     { key: "phoneBed", label: "Phone out, bed by 10:30", emoji: "📵" },
   ];
 
@@ -309,13 +308,12 @@
     return count;
   }
   // ---------- rotating chore pool ----------
-  // All 5 chores share one queue in a fixed order. Each weekday, the first
-  // ELIGIBLE item in the queue is shown — trash is only eligible Thu/Fri
-  // (pickup window), so on Mon/Tue/Wed it's skipped over without losing its
-  // place, and the next eligible item behind it is offered instead. A chore
-  // only advances (gets removed from the front of the line, with a fresh
-  // item added to the back) once it's actually checked off — an unchecked or
-  // skipped day just means the same chore is offered again next time.
+  // 4 chores share one queue in a fixed order for Mon/Tue/Wed (and Friday,
+  // once that week's trash is handled) — the front of the queue is suggested
+  // each eligible day, and only advances (removed from the queue, with a
+  // fresh item added to the back) once the actual chore done that day is
+  // recorded — whichever chore that was, not necessarily the one suggested,
+  // so overriding the suggestion doesn't cost the skipped one its turn.
   // Simulated forward from a fixed anchor date rather than stored as
   // separate state, so it's fully derived from your existing check history.
   const CHORE_POOL = [
@@ -323,35 +321,56 @@
     { key: "vacuum", label: "Vacuum", emoji: "🧹" },
     { key: "kitchen", label: "Clean kitchen", emoji: "🍽️" },
     { key: "organize", label: "General organization", emoji: "🗂️" },
-    { key: "trash", label: "Take out trash", emoji: "🗑️" },
   ];
+  // Trash always lands on Thursday (pickup window); if that day's trash
+  // wasn't done, Friday absorbs it as a one-day grace before the pool
+  // resumes as usual. Doesn't carry over past Friday — next Thursday is
+  // trash again regardless of whether the prior week's ever happened.
+  const TRASH_CHORE = { key: "trash", label: "Take out trash", emoji: "🗑️" };
   const CHORE_ROTATION_EPOCH = new Date(2026, 7, 17); // fixed Monday anchor — before this feature existed
-  function isChoreEligible(item, d) {
-    if (item.key === "trash") { const day = d.getDay(); return day === 4 || day === 5; }
-    return true;
+
+  function choreDoneOn(d) {
+    const entry = dayData[toDateKey(d)];
+    return entry && entry.checks && entry.checks.chore;
   }
   function getChoreForDate(targetDate) {
+    const day = targetDate.getDay();
+    if (day === 4) return TRASH_CHORE;
+    if (day === 5 && choreDoneOn(addDays(targetDate, -1)) !== "trash") return TRASH_CHORE;
+
     let pending = CHORE_POOL.slice();
     let nextSupplyIdx = CHORE_POOL.length;
     let cur = new Date(CHORE_ROTATION_EPOCH);
     for (let guard = 0; guard < 3000; guard++) {
-      const day = cur.getDay();
-      if (day >= 1 && day <= 5) {
-        let idx = pending.findIndex(item => isChoreEligible(item, cur));
-        if (idx === -1) idx = 0;
-        const todaysChore = pending[idx];
-        if (sameDate(cur, targetDate)) return todaysChore;
-        const entry = dayData[toDateKey(cur)];
-        const completed = !!(entry && entry.checks && entry.checks.clean);
-        if (completed) {
-          pending.splice(idx, 1);
-          pending.push(CHORE_POOL[nextSupplyIdx % CHORE_POOL.length]);
-          nextSupplyIdx++;
+      const curDay = cur.getDay();
+      const eligible = curDay === 1 || curDay === 2 || curDay === 3 ||
+        (curDay === 5 && choreDoneOn(addDays(cur, -1)) === "trash");
+      if (eligible) {
+        const suggested = pending[0];
+        if (sameDate(cur, targetDate)) return suggested;
+        const doneKey = choreDoneOn(cur);
+        if (doneKey) {
+          const doneIdx = pending.findIndex(item => item.key === doneKey);
+          if (doneIdx !== -1) {
+            pending.splice(doneIdx, 1);
+            pending.push(CHORE_POOL[nextSupplyIdx % CHORE_POOL.length]);
+            nextSupplyIdx++;
+          }
         }
       }
       cur = addDays(cur, 1);
     }
     return CHORE_POOL[0];
+  }
+  function cycleChore(entry, viewDate) {
+    const suggested = getChoreForDate(viewDate).key;
+    const order = [TRASH_CHORE.key, ...CHORE_POOL.map(c => c.key)];
+    const startIdx = order.indexOf(suggested);
+    const rotatedOrder = [...order.slice(startIdx), ...order.slice(0, startIdx)];
+    const idx = rotatedOrder.indexOf(entry.checks.chore);
+    if (idx === -1) entry.checks.chore = rotatedOrder[0];
+    else if (idx === rotatedOrder.length - 1) delete entry.checks.chore;
+    else entry.checks.chore = rotatedOrder[idx + 1];
   }
   const WEEKEND_DUAL_ITEMS = [
     { key: "water", label: "Water first", emoji: "💧" },
@@ -566,9 +585,10 @@
       const entry = getDayEntry(viewDateKey);
       const skipped = !!entry.skip;
       const activityChecked = !!entry.checks.activity;
+      const choreChecked = !!entry.checks.chore;
       const staticDone = WEEKDAY_ITEMS.filter(i => entry.checks[i.key]).length;
-      const done = staticDone + (activityChecked ? 1 : 0);
-      const dayTotal = WEEKDAY_ITEMS.length + 1;
+      const done = staticDone + (activityChecked ? 1 : 0) + (choreChecked ? 1 : 0);
+      const dayTotal = WEEKDAY_ITEMS.length + 2;
       document.getElementById("progressTrack").style.display = skipped ? "none" : "block";
       document.getElementById("progressSkipText").style.display = skipped ? "block" : "none";
       document.getElementById("progressSkipText").textContent = "Skipped — sick / vacation";
@@ -576,11 +596,12 @@
 
       const board = document.getElementById("weekdayBoard");
       board.innerHTML = "";
-      // 5 static items, then the activity slot, then the remaining 2 static items —
-      // forms a clean 4-row x 2-col grid with the activity square next to chess study.
+      // 5 static items, then the activity slot, then the chore slot, then the
+      // remaining static item — forms a clean 4-row x 2-col grid.
       const gridItems = [
         ...WEEKDAY_ITEMS.slice(0, 5).map(item => ({ kind: "static", item })),
         { kind: "activity" },
+        { kind: "chore" },
         ...WEEKDAY_ITEMS.slice(5).map(item => ({ kind: "static", item })),
       ];
       gridItems.forEach((cell, idx) => {
@@ -602,13 +623,27 @@
             saveJSON(DAY_KEY, dayData);
             render();
           });
+        } else if (cell.kind === "chore") {
+          const suggested = getChoreForDate(viewDate);
+          const doneKey = entry.checks.chore;
+          const doneChore = [TRASH_CHORE, ...CHORE_POOL].find(c => c.key === doneKey);
+          const displayChore = doneChore || suggested;
+          const choreStreak = weekdayStreak("chore", viewDate);
+          btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (choreChecked ? " sq-checked" : "") + (choreStreak > 0 ? " has-streak" : "");
+          btn.disabled = skipped;
+          btn.innerHTML = `<span class="emoji">${displayChore.emoji}</span><span class="label">${escapeHTML(displayChore.label)}</span>` +
+            (choreStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${choreStreak}</span>` : "");
+          btn.addEventListener("click", () => {
+            cycleChore(entry, viewDate);
+            saveJSON(DAY_KEY, dayData);
+            render();
+          });
         } else {
           const item = cell.item;
           const checked = !!entry.checks[item.key];
           const streak = CROSS_DAY_STREAK_KEYS.includes(item.key) ? unifiedStreak(item.key, viewDate) : weekdayStreak(item.key, viewDate);
-          const todaysChore = item.key === "clean" ? getChoreForDate(viewDate) : null;
-          const displayLabel = todaysChore ? todaysChore.label : item.label;
-          const displayEmoji = todaysChore ? todaysChore.emoji : item.emoji;
+          const displayLabel = item.label;
+          const displayEmoji = item.emoji;
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (checked ? " sq-checked" : "") + (streak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
@@ -718,11 +753,13 @@
           const d = addDays(monday, i);
           const dEntry = dayData[toDateKey(d)];
           if (dEntry && dEntry.skip) { skippedDays++; continue; }
-          const itemList = isWeekendDay(d) ? WEEKEND_DUAL_ITEMS : WEEKDAY_ITEMS;
+          const isW = isWeekendDay(d);
+          const itemList = isW ? WEEKEND_DUAL_ITEMS : WEEKDAY_ITEMS;
           const staticDone = dEntry ? itemList.filter(it => dEntry.checks[it.key]).length : 0;
           const activityDone = dEntry && dEntry.checks.activity ? 1 : 0;
-          totalDone += staticDone + activityDone;
-          totalPossible += itemList.length + 1;
+          const choreDone = !isW && dEntry && dEntry.checks.chore ? 1 : 0;
+          totalDone += staticDone + activityDone + choreDone;
+          totalPossible += itemList.length + (isW ? 1 : 2);
         }
         const pct = totalPossible > 0 ? Math.round((totalDone / totalPossible) * 100) : 0;
         document.getElementById("recapFill").style.width = pct + "%";
@@ -746,7 +783,7 @@
       const rec = dayData[key];
       const skipped = !!(rec && rec.skip);
       const done = rec ? Object.values(rec.checks || {}).filter(Boolean).length : 0;
-      const ratio = done / ((isW ? WEEKEND_DUAL_ITEMS.length : WEEKDAY_ITEMS.length) + 1);
+      const ratio = done / ((isW ? WEEKEND_DUAL_ITEMS.length : WEEKDAY_ITEMS.length) + (isW ? 1 : 2));
       const isTodayCol = key === toDateKey(realToday);
       const isViewedCol = sameDate(d, viewDate);
       const col = document.createElement("button");
@@ -834,10 +871,10 @@
 
   document.getElementById("exportBtn").addEventListener("click", () => {
     const allCols = WEEKDAY_ITEMS.map(i => ({ key: i.key, label: i.label }));
-    const rows = [["date", ...allCols.map(i => i.label), "Activity"]];
+    const rows = [["date", ...allCols.map(i => i.label), "Activity", "Chore"]];
     Object.keys(dayData).sort().forEach(date => {
       const entry = dayData[date] || { checks: {} };
-      rows.push([date, ...allCols.map(i => entry.checks[i.key] ? "1" : "0"), entry.checks.activity || ""]);
+      rows.push([date, ...allCols.map(i => entry.checks[i.key] ? "1" : "0"), entry.checks.activity || "", entry.checks.chore || ""]);
     });
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
