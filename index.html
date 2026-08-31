@@ -41,7 +41,14 @@
   .wrap { width: 100%; max-width: 420px; margin: 0 auto; padding-top: 12px; }
   .sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 
-  .quote-block { margin-bottom: 16px; text-align: center; }
+  .quote-block { margin-bottom: 16px; text-align: center; position: relative; }
+  .quote-refresh-btn {
+    position: absolute; top: -2px; right: 0;
+    background: transparent; border: none; color: var(--muted2);
+    font-size: 14px; line-height: 1; cursor: pointer; padding: 4px;
+    opacity: .5; transition: opacity .15s ease;
+  }
+  .quote-refresh-btn:hover { opacity: .9; }
   .quote-text { color: var(--quote-ink); font-size: 12.5px; line-height: 1.4; font-style: italic; }
   .quote-author { color: var(--muted2); font-size: 11px; margin-top: 4px; }
 
@@ -152,6 +159,7 @@
 <body>
 <div class="wrap sans">
   <div class="quote-block" style="font-family: 'Georgia', serif;">
+    <button class="quote-refresh-btn" id="quoteRefreshBtn" title="New quote">↻</button>
     <div class="quote-text" id="quoteText"></div>
     <div class="quote-author" id="quoteAuthor"></div>
   </div>
@@ -250,6 +258,8 @@
   let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, extra, reset } } — shared across Sat+Sun
   let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, cookingCount } }
   const LAST_BACKUP_KEY = "wb_lastBackupAt";
+  const QUOTE_OVERRIDE_KEY = "wb_quoteOverride_v1";
+  let quoteOverride = loadJSON(QUOTE_OVERRIDE_KEY, null); // { date: "YYYY-MM-DD", index } — cleared once the date moves on
 
   // ---------- date helpers ----------
   function toDateKey(d) {
@@ -579,7 +589,8 @@
     const isToday = sameDate(viewDate, realToday);
 
     // quote (always today's real quote, not the viewed day's)
-    const q = dailyQuote(realToday);
+    const todayKey = toDateKey(realToday);
+    const q = (quoteOverride && quoteOverride.date === todayKey) ? QUOTES[quoteOverride.index] : dailyQuote(realToday);
     document.getElementById("quoteText").textContent = "\u201C" + q.text + "\u201D";
     document.getElementById("quoteAuthor").textContent = "\u2014 " + q.author;
 
@@ -836,6 +847,15 @@
   }
 
   // ---------- events ----------
+  document.getElementById("quoteRefreshBtn").addEventListener("click", () => {
+    const todayKey = toDateKey(realToday);
+    const current = (quoteOverride && quoteOverride.date === todayKey) ? quoteOverride.index : QUOTES.indexOf(dailyQuote(realToday));
+    let next;
+    do { next = Math.floor(Math.random() * QUOTES.length); } while (next === current && QUOTES.length > 1);
+    quoteOverride = { date: todayKey, index: next };
+    saveJSON(QUOTE_OVERRIDE_KEY, quoteOverride);
+    render();
+  });
   document.getElementById("prevBtn").addEventListener("click", () => { viewDate = addDays(viewDate, -1); render(); });
   document.getElementById("nextBtn").addEventListener("click", () => {
     if (!sameDate(viewDate, realToday)) { viewDate = addDays(viewDate, 1); render(); }
