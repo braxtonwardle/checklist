@@ -438,9 +438,21 @@
     { text: "It is good to have an end to journey toward; but it is the journey that matters, in the end.", author: "Ursula K. Le Guin" },
     { text: "You're under no obligation to be the same person you were five minutes ago.", author: "Alan Watts" },
   ];
+  // Bit-mixing integer hash (murmur3-style finalizer) — a plain multiply-mod
+  // of the day count produces a fixed stride (e.g. always +21) that looks just
+  // as patterned as sequential once you notice it; this mixes bits so
+  // consecutive days land in a genuinely shuffled-looking order.
+  function hashInt(x) {
+    x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+    x = Math.imul(x ^ (x >>> 16), 0x45d9f3b);
+    x = x ^ (x >>> 16);
+    return x >>> 0;
+  }
   function dailyQuote(d) {
     const epochDays = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 86400000);
-    const idx = ((epochDays % QUOTES.length) + QUOTES.length) % QUOTES.length;
+    // Deterministic by date (same day always shows the same quote), but
+    // shuffled rather than marching through the list in order.
+    const idx = hashInt(epochDays) % QUOTES.length;
     return QUOTES[idx];
   }
 
