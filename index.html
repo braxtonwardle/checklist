@@ -148,7 +148,14 @@
   .small-btn { background: var(--gold); color: var(--navy-square); border: none; }
   .small-btn-ghost { background: transparent; color: var(--muted2); border: 1px solid var(--line2); }
 
-  .footer-actions { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+  .data-details { margin-top: 14px; }
+  .data-summary {
+    color: var(--muted2); font-size: 12px; cursor: pointer; list-style: none; user-select: none;
+  }
+  .data-summary::-webkit-details-marker { display: none; }
+  .data-summary::before { content: "▸ "; }
+  .data-details[open] > .data-summary::before { content: "▾ "; }
+  .footer-actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .footer-btn {
     background: transparent; color: var(--muted2); border: 1px solid var(--line2);
     border-radius: 8px; padding: 8px 12px; font-size: 12.5px; cursor: pointer; font-family: inherit;
@@ -233,13 +240,16 @@
     </div>
   </div>
 
-  <div class="footer-actions">
-    <button class="footer-btn" id="exportBtn">Export CSV</button>
-    <button class="footer-btn" id="backupBtn">Download backup</button>
-    <button class="footer-btn" id="restoreBtn">Restore backup</button>
-    <input type="file" id="restoreInput" accept="application/json" style="display:none;">
-  </div>
-  <div class="tiny">Saves locally in this browser only. <span id="backupStatus"></span></div>
+  <details class="data-details">
+    <summary class="data-summary">Data &amp; Backup</summary>
+    <div class="footer-actions">
+      <button class="footer-btn" id="exportBtn">Export CSV</button>
+      <button class="footer-btn" id="backupBtn">Download backup</button>
+      <button class="footer-btn" id="restoreBtn">Restore backup</button>
+      <input type="file" id="restoreInput" accept="application/json" style="display:none;">
+    </div>
+    <div class="tiny">Saves locally in this browser only. <span id="backupStatus"></span></div>
+  </details>
 </div>
 
 <script>
