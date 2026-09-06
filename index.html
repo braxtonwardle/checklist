@@ -195,8 +195,8 @@
 
     <div class="cluster-label">Weekend</div>
     <div class="mode-row">
-      <button class="mode-btn" id="regularBtn">Weekend</button>
-      <button class="mode-btn" id="sophieBtn">Sophie weekend</button>
+      <button class="mode-btn" id="regularBtn">The Breakaway</button>
+      <button class="mode-btn" id="sophieBtn">About Time</button>
     </div>
     <div class="board" id="extraBoard"></div>
 
@@ -215,7 +215,7 @@
   <div class="weekly">
     <div class="weekly-header">This week</div>
     <div class="weekly-row">
-      <span class="weekly-label" id="medLabel">🧘 Meditation</span>
+      <span class="weekly-label" id="medLabel">🧘 The Way</span>
       <div class="dots" id="medDots"></div>
       <div class="weekly-btns">
         <button class="small-btn" id="medPlus">+1</button>
@@ -223,7 +223,7 @@
       </div>
     </div>
     <div class="weekly-row">
-      <span class="weekly-label" id="cookLabel">🍳 Cooked at home</span>
+      <span class="weekly-label" id="cookLabel">🍳 The Menu</span>
       <div class="dots" id="cookDots"></div>
       <div class="weekly-btns">
         <button class="small-btn" id="cookPlus">+1</button>
@@ -293,12 +293,12 @@
 
   // ---------- item config ----------
   const WEEKDAY_ITEMS = [
-    { key: "bed7", label: "Up by 7", emoji: "⏰" },
-    { key: "water", label: "Water first", emoji: "💧" },
-    { key: "lucy", label: "Lucy walked", emoji: "🐾" },
-    { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
-    { key: "chess", label: "Chess study", emoji: "♞" },
-    { key: "phoneBed", label: "Phone out, bed by 10:30", emoji: "📵" },
+    { key: "bed7", label: "Opening Move", emoji: "⏰" },
+    { key: "water", label: "The Water of Life", emoji: "💧" },
+    { key: "lucy", label: "The Loop", emoji: "🐾" },
+    { key: "sleep", label: "Time Control", emoji: "🌙" },
+    { key: "chess", label: "Puzzle Rush", emoji: "♞" },
+    { key: "phoneBed", label: "Radio Silence", emoji: "📵" },
   ];
 
   // ---------- activity square (weekday and weekend) ----------
@@ -393,17 +393,17 @@
     else entry.checks.chore = rotatedOrder[idx + 1];
   }
   const WEEKEND_DUAL_ITEMS = [
-    { key: "water", label: "Water first", emoji: "💧" },
-    { key: "phoneMorning", label: "No phone first hour", emoji: "🔕" },
-    { key: "lucy", label: "Lucy walked", emoji: "🐾" },
-    { key: "phone", label: "Phone outside room", emoji: "📵" },
-    { key: "sleep", label: "Slept 7+ hrs", emoji: "🌙" },
+    { key: "water", label: "The Water of Life", emoji: "💧" },
+    { key: "phoneMorning", label: "Litany Against Fear", emoji: "🔕" },
+    { key: "lucy", label: "The Loop", emoji: "🐾" },
+    { key: "phone", label: "Radio Silence", emoji: "📵" },
+    { key: "sleep", label: "Time Control", emoji: "🌙" },
   ];
   const WEEKEND_EXTRA_ITEMS = [
-    { key: "householdProject", label: "Household project", emoji: "🔧" },
-    { key: "clean", label: "Weekly clean", emoji: "🧹" },
-    { key: "chessStudy", label: "Dedicated chess study", emoji: "♞" },
-    { key: "readingSession", label: "Reading session", emoji: "📖" },
+    { key: "householdProject", label: "The Build", emoji: "🔧" },
+    { key: "clean", label: "Full Service", emoji: "🧹" },
+    { key: "chessStudy", label: "GM Training", emoji: "♞" },
+    { key: "readingSession", label: "Chapter One", emoji: "📖" },
   ];
   const MEDITATION_TARGET = 3;
   const COOKING_TARGET = 3;
@@ -768,7 +768,7 @@
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (activityChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           const displayEmoji = activityType ? activityType.emoji : "💪";
-          const displayLabel = activityType ? activityType.label : "Activity";
+          const displayLabel = activityType ? activityType.label : "Tempo";
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
             (moveStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${moveStreak}</span>` : "");
           btn.addEventListener("click", () => {
@@ -777,14 +777,14 @@
             render();
           });
         } else if (cell.kind === "chore") {
-          const suggested = getChoreForDate(viewDate);
           const doneKey = entry.checks.chore;
           const doneChore = [TRASH_CHORE, ...CHORE_POOL].find(c => c.key === doneKey);
-          const displayChore = doneChore || suggested;
           const choreStreak = weekdayStreak("chore", viewDate);
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (choreChecked ? " sq-checked" : "") + (choreStreak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
-          btn.innerHTML = `<span class="emoji">${displayChore.emoji}</span><span class="label">${escapeHTML(displayChore.label)}</span>` +
+          const displayEmoji = doneChore ? doneChore.emoji : "🏠";
+          const displayLabel = doneChore ? doneChore.label : "Housekeeping";
+          btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
             (choreStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${choreStreak}</span>` : "");
           btn.addEventListener("click", () => {
             cycleChore(entry, viewDate);
@@ -846,7 +846,7 @@
           btn.className = "square " + (dark ? "sq-dark" : "sq-light") + (activityChecked ? " sq-checked" : "") + (moveStreak > 0 ? " has-streak" : "");
           btn.disabled = skipped;
           const displayEmoji = activityType ? activityType.emoji : "💪";
-          const displayLabel = activityType ? activityType.label : "Activity";
+          const displayLabel = activityType ? activityType.label : "Tempo";
           btn.innerHTML = `<span class="emoji">${displayEmoji}</span><span class="label">${escapeHTML(displayLabel)}</span>` +
             (moveStreak > 0 ? `<span class="streak-badge"><span class="streak-star">★</span>${moveStreak}</span>` : "");
           btn.addEventListener("click", () => {
@@ -962,8 +962,8 @@
 
     const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.getElementById("medLabel").innerHTML = "🧘 Meditation" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
-    document.getElementById("cookLabel").innerHTML = "🍳 Cooked at home" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
+    document.getElementById("medLabel").innerHTML = "🧘 The Way" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
+    document.getElementById("cookLabel").innerHTML = "🍳 The Menu" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
   }
 
   function renderDots(id, count, target) {
