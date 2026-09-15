@@ -148,6 +148,14 @@
   .small-btn { background: var(--gold); color: var(--navy-square); border: none; }
   .small-btn-ghost { background: transparent; color: var(--muted2); border: 1px solid var(--line2); }
 
+  .acquired-link {
+    display: block; width: 100%; text-align: left; margin-top: 14px; padding: 0;
+    background: transparent; border: none; color: var(--muted2); font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
+  .acquired-cell { display: flex; flex-direction: column; gap: 4px; }
+  .acquired-date { color: var(--muted2); font-size: 10px; text-align: center; }
+
   .data-details { margin-top: 14px; }
   .data-summary {
     color: var(--muted2); font-size: 12px; cursor: pointer; list-style: none; user-select: none;
@@ -165,6 +173,7 @@
 </head>
 <body>
 <div class="wrap sans">
+ <div id="mainView">
   <div class="quote-block" style="font-family: 'Georgia', serif;">
     <button class="quote-refresh-btn" id="quoteRefreshBtn" title="New quote">↻</button>
     <div class="quote-text" id="quoteText"></div>
@@ -215,14 +224,6 @@
   <div class="weekly">
     <div class="weekly-header">This week</div>
     <div class="weekly-row">
-      <span class="weekly-label" id="medLabel">🧘 The Way</span>
-      <div class="dots" id="medDots"></div>
-      <div class="weekly-btns">
-        <button class="small-btn" id="medPlus">+1</button>
-        <button class="small-btn-ghost" id="medReset">reset</button>
-      </div>
-    </div>
-    <div class="weekly-row">
       <span class="weekly-label" id="cookLabel">🍳 The Menu</span>
       <div class="dots" id="cookDots"></div>
       <div class="weekly-btns">
@@ -240,6 +241,8 @@
     </div>
   </div>
 
+  <button class="acquired-link" id="acquiredLinkBtn">🎓 Acquired Habits</button>
+
   <details class="data-details">
     <summary class="data-summary">Data &amp; Backup</summary>
     <div class="footer-actions">
@@ -250,6 +253,17 @@
     </div>
     <div class="tiny">Saves locally in this browser only. <span id="backupStatus"></span></div>
   </details>
+ </div>
+
+ <div id="acquiredView" style="display:none;">
+   <div class="nav-row">
+     <button class="nav-btn" id="acquiredBackBtn">‹</button>
+     <div class="nav-center"><span class="nav-date">🎓 Acquired Habits</span></div>
+     <span style="width:32px;"></span>
+   </div>
+   <div class="board" id="acquiredBoard"></div>
+   <div class="tiny" style="margin-top:10px;">Streak is frozen at the day each habit graduated off the daily board — revisit here on weekends to confirm it's still holding, no need to keep checking it off.</div>
+ </div>
 </div>
 
 <script>
@@ -266,7 +280,9 @@
 
   let dayData = loadJSON(DAY_KEY, {});       // { "YYYY-MM-DD": { checks: {} } } — every day, weekday or weekend
   let weekendData = loadJSON(WEEKEND_KEY, {}); // { "wk-YYYY-MM-DD": { mode, extra, reset } } — shared across Sat+Sun
-  let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { meditationCount, cookingCount } }
+  let weekData = loadJSON(WEEK_KEY, {});     // { "wk-YYYY-MM-DD": { cookingCount } }
+  const ACQUIRED_KEY = "wb_acquired_v1";
+  let acquiredData = loadJSON(ACQUIRED_KEY, {}); // { water: { streak, graduatedOn } } — frozen once, at graduation
   const LAST_BACKUP_KEY = "wb_lastBackupAt";
   const QUOTE_OVERRIDE_KEY = "wb_quoteOverride_v1";
   let quoteOverride = loadJSON(QUOTE_OVERRIDE_KEY, null); // { date: "YYYY-MM-DD", index } — cleared once the date moves on
@@ -295,10 +311,18 @@
   const WEEKDAY_ITEMS = [
     { key: "sleep", label: "Recharge (7+)", emoji: "🌙" },
     { key: "bed7", label: "First Light", emoji: "☀️" },
-    { key: "water", label: "The Water of Life", emoji: "💧" },
+    { key: "meditation", label: "The Way", emoji: "🧘" },
     { key: "lucy", label: "The Loop", emoji: "🐾" },
     { key: "chess", label: "GM Training", emoji: "♞" },
     { key: "phoneBed", label: "Radio Silence", emoji: "📵" },
+  ];
+
+  // ---------- acquired habits (graduated off the daily board) ----------
+  // Streak is frozen the moment a habit is added here — it's read from
+  // existing check history once, then never recomputed, since the habit
+  // stops being logged day to day going forward.
+  const ACQUIRED_HABITS = [
+    { key: "water", label: "The Water of Life", emoji: "💧" },
   ];
 
   // ---------- activity square (weekday and weekend) ----------
@@ -394,7 +418,7 @@
   }
   const WEEKEND_DUAL_ITEMS = [
     { key: "sleep", label: "Recharge (7+)", emoji: "🌙" },
-    { key: "water", label: "The Water of Life", emoji: "💧" },
+    { key: "meditation", label: "The Way", emoji: "🧘" },
     { key: "phoneMorning", label: "Litany Against Fear", emoji: "🔕" },
     { key: "lucy", label: "The Loop", emoji: "🐾" },
     { key: "phone", label: "Radio Silence", emoji: "📵" },
@@ -405,7 +429,6 @@
     { key: "mealPrep", label: "Meal Prep", emoji: "🍱" },
     { key: "readingSession", label: "Page Turner", emoji: "📖" },
   ];
-  const MEDITATION_TARGET = 3;
   const COOKING_TARGET = 3;
   const LIFTING_TARGET = 2;
   const CYCLING_TARGET = 1;
@@ -609,7 +632,7 @@
     return weekendData[key];
   }
   function getWeekEntry(key) {
-    if (!weekData[key]) weekData[key] = { meditationCount: 0, cookingCount: 0 };
+    if (!weekData[key]) weekData[key] = { cookingCount: 0 };
     if (weekData[key].cookingCount === undefined) weekData[key].cookingCount = 0;
     return weekData[key];
   }
@@ -645,10 +668,10 @@
   }
   function weekdayStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, d => !isWeekendDay(d)); }
   function weekendStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, isWeekendDay); }
-  // Some keys mean the same thing on weekdays and weekends (water/lucy/sleep
+  // Some keys mean the same thing on weekdays and weekends (meditation/lucy/sleep
   // appear in both item lists) — for those, the streak should run across every
   // day of the week instead of resetting at the weekday/weekend boundary.
-  const CROSS_DAY_STREAK_KEYS = ["water", "lucy", "sleep"];
+  const CROSS_DAY_STREAK_KEYS = ["meditation", "lucy", "sleep"];
   function unifiedStreak(itemKey, uptoDate) { return dayTypeStreak(itemKey, uptoDate, () => true); }
 
   // Consecutive days (every day of the week) with any activity type logged —
@@ -702,6 +725,42 @@
     return String(str).replace(/[&<>"']/g, s => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[s]));
   }
 
+  // Freeze each acquired habit's streak the first time this code runs after
+  // it's added to ACQUIRED_HABITS — read once from existing check history,
+  // then left alone, since the habit no longer gets logged day to day.
+  let acquiredDataChanged = false;
+  ACQUIRED_HABITS.forEach(h => {
+    if (!acquiredData[h.key]) {
+      acquiredData[h.key] = { streak: unifiedStreak(h.key, realToday), graduatedOn: toDateKey(realToday) };
+      acquiredDataChanged = true;
+    }
+  });
+  if (acquiredDataChanged) saveJSON(ACQUIRED_KEY, acquiredData);
+
+  function renderAcquiredView() {
+    const board = document.getElementById("acquiredBoard");
+    board.innerHTML = "";
+    ACQUIRED_HABITS.forEach((h, idx) => {
+      const row = Math.floor(idx / 2), col = idx % 2;
+      const dark = (row + col) % 2 === 1;
+      const rec = acquiredData[h.key] || { streak: 0, graduatedOn: null };
+      const cell = document.createElement("div");
+      cell.className = "acquired-cell";
+      const tile = document.createElement("div");
+      tile.className = "square sq-checked has-streak " + (dark ? "sq-dark" : "sq-light");
+      tile.innerHTML = `<span class="emoji">${h.emoji}</span><span class="label">${escapeHTML(h.label)}</span>` +
+        `<span class="streak-badge"><span class="streak-star">★</span>${rec.streak}</span>`;
+      cell.appendChild(tile);
+      const dateLbl = document.createElement("div");
+      dateLbl.className = "acquired-date";
+      dateLbl.textContent = rec.graduatedOn
+        ? "Graduated " + new Date(rec.graduatedOn + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })
+        : "";
+      cell.appendChild(dateLbl);
+      board.appendChild(cell);
+    });
+  }
+
   function formatBackupStatus(iso) {
     if (!iso) return "Never backed up — download one below.";
     const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
@@ -711,7 +770,13 @@
   }
 
   // ---------- render ----------
+  let showAcquired = false;
   function render() {
+    document.getElementById("mainView").style.display = showAcquired ? "none" : "block";
+    document.getElementById("acquiredView").style.display = showAcquired ? "block" : "none";
+    renderAcquiredView();
+    if (showAcquired) return;
+
     const viewDateKey = toDateKey(viewDate);
     const viewWeekKey = weekKeyOf(viewDate);
     const weekEntry = getWeekEntry(viewWeekKey);
@@ -919,7 +984,6 @@
         document.getElementById("recapPct").textContent = pct + "%";
         const extraParts = [`${totalDone}/${totalPossible} items`];
         if (skippedDays) extraParts.push(`${skippedDays} skipped`);
-        extraParts.push(`🧘 ${weekEntry.meditationCount}/${MEDITATION_TARGET}`);
         extraParts.push(`🍳 ${weekEntry.cookingCount}/${COOKING_TARGET}`);
         document.getElementById("recapExtra").textContent = extraParts.join(" · ");
       } else {
@@ -955,14 +1019,11 @@
     });
 
     // weekly counters
-    renderDots("medDots", weekEntry.meditationCount, MEDITATION_TARGET);
     renderDots("cookDots", weekEntry.cookingCount, COOKING_TARGET);
     renderDots("liftDots", countActivityThisWeek("lifting", viewDate), LIFTING_TARGET);
     renderDots("cycleDots", countActivityThisWeek("cycling", viewDate), CYCLING_TARGET);
 
-    const medStreak = weeklyCounterStreak("meditationCount", MEDITATION_TARGET, viewDate);
     const cookStreak = weeklyCounterStreak("cookingCount", COOKING_TARGET, viewDate);
-    document.getElementById("medLabel").innerHTML = "🧘 The Way" + (medStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${medStreak}wk</span>` : "");
     document.getElementById("cookLabel").innerHTML = "🍳 The Menu" + (cookStreak > 0 ? `<span class="streak-mini"><span class="streak-star">★</span>${cookStreak}wk</span>` : "");
   }
 
@@ -1012,15 +1073,13 @@
     wEntry.mode = "sophie"; saveJSON(WEEKEND_KEY, weekendData); render();
   });
 
-  document.getElementById("medPlus").addEventListener("click", () => {
-    const wk = getWeekEntry(weekKeyOf(viewDate));
-    wk.meditationCount = Math.min(MEDITATION_TARGET, wk.meditationCount + 1);
-    saveJSON(WEEK_KEY, weekData); render();
+  document.getElementById("acquiredLinkBtn").addEventListener("click", () => {
+    showAcquired = true; render();
   });
-  document.getElementById("medReset").addEventListener("click", () => {
-    const wk = getWeekEntry(weekKeyOf(viewDate));
-    wk.meditationCount = 0; saveJSON(WEEK_KEY, weekData); render();
+  document.getElementById("acquiredBackBtn").addEventListener("click", () => {
+    showAcquired = false; render();
   });
+
   document.getElementById("cookPlus").addEventListener("click", () => {
     const wk = getWeekEntry(weekKeyOf(viewDate));
     wk.cookingCount = Math.min(COOKING_TARGET, wk.cookingCount + 1);
