@@ -7,9 +7,9 @@ Live at: `https://<your-username>.github.io/<repo-name>/`
 
 ## Features
 
-- **Weekday checklist** — a fixed set of daily items (wake time, water, dog walk, sleep, chess study, a rotating chore, phone/bedtime), plus an Activity slot
-- **Activity square** — one square, every day (weekday and weekend alike), that cycles through Mobility / Climbing-Lifting / Cycling on repeated taps. Nothing is pinned to a specific day, so what actually happened that day is what gets logged. A "This week" panel tracks Climbing/Lifting (target 2) and Cycling (target 1) against a weekly goal, computed directly from that week's squares.
-- **Chore square** — like the Activity square, it starts each day as a generic placeholder and reveals the actual chore only once tapped, suggesting one from a rotating pool of 4 (bathroom/vacuum/kitchen/organize) first; further taps cycle through the other options if a different one is actually needed that day, whichever one you land on is what gets recorded, and the one you skipped stays in the pool for next time. Trash is separate from the pool and always lands on Thursday (pickup window), with Friday as a one-day catch-up if Thursday's was missed.
+- **Weekday checklist** — a fixed set of daily items (wake time, water, dog walk, sleep, chess study, a chore check, phone/bedtime), plus an Activity slot
+- **Activity square** — one square, every day (weekday and weekend alike), that cycles through Mobility / Climbing-Lifting / Cycling on repeated taps. Nothing is pinned to a specific day, so what actually happened that day is what gets logged. A "This week" panel tracks Climbing/Lifting (target 2) and Cycling (target 1) against a weekly goal, computed directly from that week's squares, with its own streak.
+- **Chore square** — a plain yes/no toggle for having kept the place generally tidy that day, no specific task tracked.
 - **Weekend mode** — Saturday and Sunday each render as their own day, with their own progress count and sick/vacation skip, while a set of extra items (household project, weekly clean, chess study, reading) stays shared across the whole weekend. A second, lighter weekend mode hides the extra items entirely, toggled per weekend.
 - **Weekly counters** — meditation and home-cooked-meals targets (×3/week), tracked as dot progress rather than daily checkboxes.
 - **Streaks** — shown per daily item (weekday and weekend alike) and per weekly counter. A day marked "sick / traveling" pauses a streak instead of breaking it; an in-progress day/week is never treated as a miss before it's actually over.
